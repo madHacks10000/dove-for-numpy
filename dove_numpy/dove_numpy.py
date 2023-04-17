@@ -3,7 +3,7 @@
 #logistic regression
 #zeros, dot, sum, exp, array
 
-opNum = 0 #total number of operations
+opNum = 1 #total number of operations
 TRANSCRIPT = "transcript.txt"
 file = open(TRANSCRIPT, "w")
 
@@ -17,13 +17,13 @@ class Matrix():
         self.operation = operation
         opNum += 1
         if self.name == None: #matrix will be modified as specified later on in the user's program
-            print("def ${} [1:{}] [1:{}]\n\t{} ".format(opNum, self.row, self.col, self.operation))
+            print("def ${} [1:{}] [1:{}]\n\t{} ".format(opNum, self.row, self.col, self.operation), end = ' ')
         else: #case where external data is used... I think
              print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iD, self.row, self.col, self.name, self.iD))
 
     def modifyMatrix(self, operand, operation):
         tmp = Matrix(self.row, self.col, None, operation)
-        print("${} ${}\nend ${}".format(self.iD, operand, tmp.iD)) 
+        print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
         return tmp
 
 def zeros(shape): #shape is int or tuple of ints
@@ -37,14 +37,7 @@ def zeros(shape): #shape is int or tuple of ints
     opNum += 1
 
 def dot(item1, item2): #add cases for 1D vs 2D
-    global opNum #has to be a different way?
-    #file.write("def ${} [1:{}] [1:{}]".format(opNum, shape[1], shape[2]))
-    #file.write("\t== ${} * ${}".format(opNum))
-    #file.write("end ${}".format(opNum))
-    m = Matrix(item1.row, item2.col)
-    print("\t== ${} * ${}".format(item1.iD, item2.iD)) 
-    print("end ${}".format(m.iD))
-    opNum += 1
+    m = Matrix.modifyMatrix(item1, item2, "*")
     return m
 
 def dot2(item1, item2):
