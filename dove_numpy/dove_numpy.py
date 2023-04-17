@@ -42,14 +42,14 @@ def sum(arr): #elements to sum, takes in array???
     opNum += 1
     print("sum ${}".format(arr.iD))
     print("set ${}".format(opNum))
-
+    #print("update ${}".format(opNum)) don't think I need this
 
 def exp(values): #math.exp function does this... can represent e
     #m = Matrix.modifyMatrix(, values, none, "^")
     global opNum
     opNum += 1
     print("set ${}".format(values.iD))
-    print("exp ${}".format(opNum))
+    print("update exp ${}".format(opNum))
 
 #def array(data): #can accept like any object... add options later
     #if isinstance(data, int): #1D array
