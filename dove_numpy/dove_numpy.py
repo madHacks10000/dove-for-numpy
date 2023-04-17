@@ -11,7 +11,7 @@ class Matrix():
     def __init__(self, row, col, name = None, operation = None):
         global opNum
         self.name = name
-        self.id = id #need in addition to global variable
+        self.iD = opNum #need in addition to global variable
         self.row = row
         self.col = col
         self.operation = operation
@@ -19,11 +19,11 @@ class Matrix():
         if self.name == None: #matrix will be modified as specified later on in the user's program
             print("def ${} [1:{}] [1:{}]\n\t{} ".format(opNum, self.row, self.col, self.operation))
         else: #case where external data is used... I think
-             print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.id, self.row, self.col, self.name, self.id))
+             print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iD, self.row, self.col, self.name, self.iD))
 
     def modifyMatrix(self, operand, operation):
         tmp = Matrix(self.row, self.col, None, operation)
-        print("${} ${}\nend ${}".format(self.id, operand, tmp.id)) 
+        print("${} ${}\nend ${}".format(self.iD, operand, tmp.iD)) 
         return tmp
 
 def zeros(shape): #shape is int or tuple of ints
@@ -42,8 +42,8 @@ def dot(item1, item2): #add cases for 1D vs 2D
     #file.write("\t== ${} * ${}".format(opNum))
     #file.write("end ${}".format(opNum))
     m = Matrix(item1.row, item2.col)
-    print("\t== ${} * ${}".format(item1.id, item2.id)) 
-    print("end ${}".format(m.id))
+    print("\t== ${} * ${}".format(item1.iD, item2.iD)) 
+    print("end ${}".format(m.iD))
     opNum += 1
     return m
 
@@ -52,7 +52,7 @@ def dot2(item1, item2):
 
 def sum(arr): # elements to sum, takes in array???
     global opNum
-    print("sum ${}".format(arr.id))
+    print("sum ${}".format(arr.iD))
     print("set ${}".format(opNum))
     opNum += 1
 
