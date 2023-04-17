@@ -38,14 +38,25 @@ def dot(item1, item2): #add cases for 1D vs 2D
     return m
 
 def sum(arr): #elements to sum, takes in array???
+    global opNum
+    opNum += 1
     print("sum ${}".format(arr.iD))
     print("set ${}".format(opNum))
 
-def exp(values): #math.exp function does this... can represent e
-    m = Matrix.modifyMatrix(, values, none, "^")
 
-def array(data): #can accept like any object... add options later
-    m = Matrix(data.row, data.col)
+def exp(values): #math.exp function does this... can represent e
+    #m = Matrix.modifyMatrix(, values, none, "^")
+    global opNum
+    opNum += 1
+    print("set ${}".format(values.iD))
+    print("exp ${}".format(opNum))
+
+#def array(data): #can accept like any object... add options later
+    #if isinstance(data, int): #1D array
+        #m = Matrix(1, shape, None, "==") #file.write("def ${} [1:1] [1:{}]".format(opNum, shape))
+    #else: #2D
+        #m = Matrix(data[0], data[1], None, "==") #file.write("def ${} [1:{}] [1:{}]".format(opNum, shape[1], shape[2])) 
+    #print("#0\nend ${}".format(opNum)) #file.write
 
 
     
