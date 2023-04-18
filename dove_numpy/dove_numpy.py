@@ -31,10 +31,15 @@ def zeros(shape): #shape is int or tuple of ints
         m = Matrix(1, shape, None, "==") #file.write("def ${} [1:1] [1:{}]".format(opNum, shape))
     else: #2D
         m = Matrix(shape[0], shape[1], None, "==") #file.write("def ${} [1:{}] [1:{}]".format(opNum, shape[1], shape[2])) 
-    print("#0\nend ${}".format(opNum)) #file.write
+    print("#0\nend ${}".format(m.iD)) #file.write
 
-def dot(item1, item2): #add cases for 1D vs 2D
-    m = Matrix.modifyMatrix(item1, item2, "*")
+def dot(item1, item2): #need to convert inputs into my matrices!!!!!!!!
+    #logistic regression: 2D matrix then 'None'
+    if item2 == 'None':
+        m = Matrix(1, len(item1), None, "*") #taking in numpy nd array
+    else:
+        m = Matrix.modifyMatrix(item1, item2, "*")
+    print("${} ${}\nend ${}".format(item1.iD, item2.iD, m.iD))
     return m
 
 def sum(arr): #elements to sum, takes in array???
