@@ -2,6 +2,7 @@
 #in other file: import dove.numpy as np
 #logistic regression
 #zeros, dot, sum, exp, array
+import numpy as np
 
 opNum = 1 #total number of operations
 TRANSCRIPT = "transcript.txt"
@@ -22,8 +23,15 @@ class Matrix():
              print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iD, self.row, self.col, self.name, self.iD))
 
     def modifyMatrix(self, operand, operation):
-        tmp = Matrix(self.row, self.col, None, operation)
-        print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
+        global opNum
+        if operation == "*": #dot product
+            if operand == 'None': #how to deal with this???
+                #n = 'None'
+                opNum += 1
+                print("${} \nend ${}".format(self.iD, opNum))
+            else:
+                tmp = Matrix(self.shape[0], operand.shape[1], None, operation) #should be 455, 30
+                print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
         return tmp
 
 def zeros(shape): #shape is int or tuple of ints
@@ -36,10 +44,14 @@ def zeros(shape): #shape is int or tuple of ints
 def dot(item1, item2): #need to convert inputs into my matrices!!!!!!!!
     #logistic regression: 2D matrix then 'None'
     if item2 == 'None':
-        m = Matrix(1, len(item1), None, "*") #taking in numpy nd array
+        m = Matrix(item1.shape[0], item1.shape[1], 'placeholder', None) #taking in numpy nd array
     else:
-        m = Matrix.modifyMatrix(item1, item2, "*")
-    print("${} ${}\nend ${}".format(item1.iD, item2.iD, m.iD))
+        #m = Matrix.modifyMatrix(item1, item2, "*")
+        m = Matrix(item1.shape[0], item1.shape[1], 'placeholder', None)
+        n = Matrix(item2.shape[0], item2.shape[1], 'placeholder', None)
+    #now actual dot operations
+    tmp = Matrix.modifyMatrix(m, n, "*")
+    #print("${} ${}\nend ${}".format(item1.iD, item2.iD, m.iD))
     return m
 
 def sum(arr): #elements to sum, takes in array???
