@@ -1,5 +1,7 @@
-import numpy as np
-
+#import numpy as np
+import sys
+sys.path.append('../')
+import dove_numpy.dove_numpy as np
 
 class LogisticRegression:
     def __init__(self, learning_rate=0.001, n_iters=1000):
@@ -10,6 +12,8 @@ class LogisticRegression:
 
     def fit(self, X, y):
         n_samples, n_features = X.shape
+        #added by me
+        #print("n_features: {}".format(n_features)) #works correctly
 
         # init parameters
         self.weights = np.zeros(n_features)
@@ -18,7 +22,13 @@ class LogisticRegression:
         # gradient descent
         for _ in range(self.n_iters):
             # approximate y with linear combination of weights and x, plus bias
-            linear_model = np.dot(X, self.weights) + self.bias
+            #print("X type: {}".format(type(X))) #2D matrix
+            #print("self.weights: {}".format(self.weights)) #value is 'None'
+            #print(X.shape)
+            #print("bias type: {}".format(type(self.bias)))
+            #print("dot product result: {}".format(type(np.dot(X, self.weights))))
+            
+            linear_model = np.dot(X, self.weights) + self.bias #self.weights = None
             # apply sigmoid function
             y_predicted = self._sigmoid(linear_model)
 
@@ -32,7 +42,23 @@ class LogisticRegression:
     def predict(self, X):
         linear_model = np.dot(X, self.weights) + self.bias
         y_predicted = self._sigmoid(linear_model)
-        y_predicted_cls = [1 if i > 0.5 else 0 for i in y_predicted]
+        y_predicted_cls = [1 if i > 0.5 else 0 for i in y_predicted] #not exactly sure what to do with thid
+        #y_predicated_cls = []
+        #for i in y_predicated:
+        #    if i > 0.5:
+        #        y_predicated_cls.append(1)
+        #    else:
+        #        y_predicated_cl.append(0)
+        # dot representation:
+        # forloop [1:10:1] \1 <--- won't be 10, change later
+        # slice const $1 [\1] [\1] $3 
+        # set $4 <-- unclear from here down
+        # > $3 #0.5
+        # set $5
+        # == $3
+        # set $6
+        # ifelse $4 $6 <-- unclear, ask Tushaf
+        # endloop \1
         return np.array(y_predicted_cls)
 
     def _sigmoid(self, x):
@@ -44,6 +70,7 @@ if __name__ == "__main__":
     # Imports
     from sklearn.model_selection import train_test_split
     from sklearn import datasets
+    import numpy as n
 
     def accuracy(y_true, y_pred):
         accuracy = np.sum(y_true == y_pred) / len(y_true)
