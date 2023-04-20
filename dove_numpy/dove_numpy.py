@@ -25,10 +25,11 @@ class Matrix():
     def modifyMatrix(self, operand, operation):
         global opNum
         if operation == "*": #dot product
-            if operand == 'None': #how to deal with this???
+            if type(operand) == type(None): #how to deal with this???
                 #n = 'None'
                 opNum += 1
                 print("${} \nend ${}".format(self.iD, opNum))
+                tmp = self
             else:
                 tmp = Matrix(self.shape[0], operand.shape[1], None, operation) #should be 455, 30
                 print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
@@ -43,16 +44,19 @@ def zeros(shape): #shape is int or tuple of ints
 
 def dot(item1, item2): #need to convert inputs into my matrices!!!!!!!!
     #logistic regression: 2D matrix then 'None'
-    if item2 == 'None':
+    #print("item 1: {}".format(item1))
+    #print("item 2: {}".format(item2))
+    if type(item2) == type(None):
         m = Matrix(item1.shape[0], item1.shape[1], 'placeholder', None) #taking in numpy nd array
+        n = None
     else:
         #m = Matrix.modifyMatrix(item1, item2, "*")
         m = Matrix(item1.shape[0], item1.shape[1], 'placeholder', None)
         n = Matrix(item2.shape[0], item2.shape[1], 'placeholder', None)
     #now actual dot operations
-    tmp = Matrix.modifyMatrix(m, n, "*")
-    #print("${} ${}\nend ${}".format(item1.iD, item2.iD, m.iD))
-    return m
+    mn = Matrix.modifyMatrix(m, n, "*")
+    return mn
+
 
 def sum(arr): #elements to sum, takes in array???
     global opNum
