@@ -15,6 +15,7 @@ class Matrix():
         self.iD = opNum #need in addition to global variable
         self.row = row
         self.col = col
+        self.shape = (row, col)
         self.operation = operation
         opNum += 1
         if self.name == None: #matrix will be modified as specified later on in the user's program
@@ -27,13 +28,46 @@ class Matrix():
         if operation == "*": #dot product
             if type(operand) == type(None): #how to deal with this???
                 #n = 'None'
-                opNum += 1
-                print("${} \nend ${}".format(self.iD, opNum))
+                #opNum += 1
+                #tmp = Matrix(self.shape[0], self.shape[1], None, operation)
+                #print("${} \nend ${}".format(self.iD, opNum))
                 tmp = self
+                return tmp #dot product of a matrix with nothing is just the matrix
+            elif type(operand) == int:
+                tmp = Matrix(self.shape[0], self.shape[1], None, operation) #should be 455, 30
+                print("${} #{}\nend ${}".format(self.iD, operand, tmp.iD))
             else:
                 tmp = Matrix(self.shape[0], operand.shape[1], None, operation) #should be 455, 30
                 print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
+        else:
+            if type(operand) == type(None): #how to deal with this???
+                #n = 'None'
+                #opNum += 1
+                #tmp = Matrix(self.shape[0], self.shape[1], None, operation)
+                #print("${} \nend ${}".format(self.iD, opNum))
+                tmp = self
+                return tmp
+            elif type(operand) == int: #adding a constant
+                tmp = Matrix(self.row, self.col, None, operation)
+                print("${} #{}\nend ${}".format(self.iD, operand, tmp.iD))
+            else:
+                tmp = Matrix(self.row, self.col, None, operation)
+                print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
         return tmp
+    
+    def __add__(self, other): #overload addition operator
+        return Matrix.modifyMatrix(self, other, '+')
+    
+    def __mul__(self, other): #overload multiplication operator
+        return Matrix.modifyMatrix(self, other, '*')
+
+    def __div__(self, other): #overload multiplication operator
+        return Matrix.modifyMatrix(self, other, '/')
+
+    def __neg__(self):
+        return Matrix.modifyMatrix(self, -1, '*')
+
+
 
 def zeros(shape): #shape is int or tuple of ints
     if isinstance(shape, int): #1D array
@@ -65,12 +99,11 @@ def sum(arr): #elements to sum, takes in array???
     print("set ${}".format(opNum))
     #print("update ${}".format(opNum)) don't think I need this
 
-def exp(values): #math.exp function does this... can represent e
-    #m = Matrix.modifyMatrix(, values, none, "^")
-    global opNum
-    opNum += 1
-    print("set ${}".format(values.iD))
-    print("update exp ${}".format(opNum))
+def exp(values): #values is a Matrix
+    tmp = Matrix.modifyMatrix(values, None, "^")
+    print("set ${}".format(tmp.iD))
+    print("update exp ${}".format(values.iD))
+    return tmp
 
 #def array(data): #can accept like any object... add options later
     #if isinstance(data, int): #1D array
