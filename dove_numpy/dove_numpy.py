@@ -50,12 +50,18 @@ class Matrix():
             elif type(operand) == int: #adding a constant
                 tmp = Matrix(self.row, self.col, None, operation)
                 print("${} #{}\nend ${}".format(self.iD, operand, tmp.iD))
-            else:
+            elif type(self) == int:
+                tmp = Matrix(operand.row, operand.col, None, operation)
+                print("#{} ${}\nend ${}".format(self, operand.iD, tmp.iD))
+            else: #might need another case where both operands are integers
                 tmp = Matrix(self.row, self.col, None, operation)
                 print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
         return tmp
     
     def __add__(self, other): #overload addition operator
+        return Matrix.modifyMatrix(self, other, '+')
+    
+    def __radd__(self, other): #overload addition operator
         return Matrix.modifyMatrix(self, other, '+')
     
     def __mul__(self, other): #overload multiplication operator
@@ -64,10 +70,17 @@ class Matrix():
     def __div__(self, other): #overload multiplication operator
         return Matrix.modifyMatrix(self, other, '/')
 
+    #def __rdiv__(self, other): #overload addition operator <---outdated
+        #return Matrix.modifyMatrix(self, other, '/')
+
+    def __rtruediv__(self, other): #overload multiplication operator
+        return Matrix.modifyMatrix(self, other, '/')
+    
+    def __rfloordiv__(self, other): #overload multiplication operator
+        return Matrix.modifyMatrix(self, other, '/')
+
     def __neg__(self):
         return Matrix.modifyMatrix(self, -1, '*')
-
-
 
 def zeros(shape): #shape is int or tuple of ints
     if isinstance(shape, int): #1D array
