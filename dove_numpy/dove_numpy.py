@@ -33,7 +33,7 @@ class Matrix():
                 #print("${} \nend ${}".format(self.iD, opNum))
                 tmp = self
                 return tmp #dot product of a matrix with nothing is just the matrix
-            elif type(operand) == int:
+            elif (type(operand) == int) or (type(operand) == float):
                 tmp = Matrix(self.shape[0], self.shape[1], None, operation) #should be 455, 30
                 print("${} #{}\nend ${}".format(self.iD, operand, tmp.iD))
             else:
@@ -47,31 +47,64 @@ class Matrix():
                 #print("${} \nend ${}".format(self.iD, opNum))
                 tmp = self
                 return tmp
-            elif type(operand) == int: #adding a constant
+            elif (type(operand) == int) or (type(operand) == float): #adding a constant
                 tmp = Matrix(self.row, self.col, None, operation)
                 print("${} #{}\nend ${}".format(self.iD, operand, tmp.iD))
-            elif type(self) == int:
+            elif (type(self) == int) or (type(self) == float):
                 tmp = Matrix(operand.row, operand.col, None, operation)
                 print("#{} ${}\nend ${}".format(self, operand.iD, tmp.iD))
             else: #might need another case where both operands are integers
                 tmp = Matrix(self.row, self.col, None, operation)
+                #print(self) #Matrix
+                #print(self.iD) #id is 6
+                #print(operand) #operand is matrix
+                #print(operation) #subtraction
                 print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
         return tmp
     
     def __add__(self, other): #overload addition operator
         return Matrix.modifyMatrix(self, other, '+')
+
+    def __sub__(self, other): #overload addition operator
+        if type(self) == type(None):
+            self = 0
+        elif type(other) == type(None):
+            other = 0
+
+        if type(other) != Matrix: #need to add more cases
+                if type(other) == int:
+                    other = other
+                else: #it is a ndarray that needs to be converted
+                    other = Matrix(1, len(other), "external for now", "none") #make ndarray into a Matrix, can't alwas hardcode 1
+        return Matrix.modifyMatrix(self, other, '-')
+
+    def __rsub__(self, other):
+        if type(self) == type(None):
+            self = 0
+            #return negated matrix
+        elif type(other) == type(None):
+            other = 0
+            #return negated matrix
+
+        if type(other) != Matrix: #need to add more cases
+                if type(other) == int:
+                    other = other
+                else: #ndarray that needs to be converted
+                    other = Matrix(1, len(other), "external for now", "none") #make ndarray into a Matrix, can't alwas hardcode 1
+                
+        return Matrix.modifyMatrix(self, other, '-')
     
     def __radd__(self, other): #overload addition operator
         return Matrix.modifyMatrix(self, other, '+')
     
     def __mul__(self, other): #overload multiplication operator
         return Matrix.modifyMatrix(self, other, '*')
+    
+    def __rmul__(self, other): #overload multiplication operator
+        return Matrix.modifyMatrix(self, other, '*')
 
     def __div__(self, other): #overload multiplication operator
         return Matrix.modifyMatrix(self, other, '/')
-
-    #def __rdiv__(self, other): #overload addition operator <---outdated
-        #return Matrix.modifyMatrix(self, other, '/')
 
     def __rtruediv__(self, other): #overload multiplication operator
         return Matrix.modifyMatrix(self, other, '/')
@@ -107,14 +140,14 @@ def dot(item1, item2): #need to convert inputs into my matrices!!!!!!!!
 
 def sum(arr): #elements to sum, takes in array???
     global opNum
-    opNum += 1
     print("sum ${}".format(arr.iD))
-    print("set ${}".format(opNum))
+    print("set %{}".format(opNum))
+    return opNum
     #print("update ${}".format(opNum)) don't think I need this
 
 def exp(values): #values is a Matrix
     tmp = Matrix.modifyMatrix(values, None, "^")
-    print("set ${}".format(tmp.iD))
+    print("set ${}".format(tmp.iD)) #<--def needs some fixing
     print("update exp ${}".format(values.iD))
     return tmp
 
@@ -124,6 +157,7 @@ def exp(values): #values is a Matrix
     #else: #2D
         #m = Matrix(data[0], data[1], None, "==") #file.write("def ${} [1:{}] [1:{}]".format(opNum, shape[1], shape[2])) 
     #print("#0\nend ${}".format(opNum)) #file.write
+
 
 
     
