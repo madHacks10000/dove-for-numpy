@@ -11,17 +11,18 @@ TRANSCRIPT = "transcript.txt"
 file = open(TRANSCRIPT, "w")
 
 class Register():
-    def __init__(self, value):
+    def __init__(self):
+        global reg_num
         self.iD = reg_num
-        self.value = value
+        reg_num += 1
     
-    def modify_register(self, operation, operand):
+    def modify_register(self):
         print("do something")  
         print("set %{}".format(self.iD))
 
-    class ForIndex(Register):
-        def __init__(self, value):
-            self.iD = loop_indx
+class ForIndex(Register):
+    def __init__(self):
+        self.iD = loop_indx
     
     #soon, overload add, sub, etc
 
@@ -68,58 +69,64 @@ class Matrix():
                 print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
         return tmp
     
-def __add__(self, other): #overload addition operator
-    return Matrix.modifyMatrix(self, other, '+')
+    def __add__(self, other): #this is the correct indentation
+        return Matrix.modifyMatrix(self, other, '+')
 
-def __sub__(self, other): #overload addition operator
-    if type(self) == type(None):
-        self = 0
-    elif type(other) == type(None):
-        other = 0
+    def __sub__(self, other): #overload addition operator
+        if type(self) == type(None):
+            self = 0
+        elif type(other) == type(None):
+            other = 0
 
-    if type(other) != Matrix: #need to add more cases
-            if type(other) == int:
-                other = other
-            else: #it is a ndarray that needs to be converted
-                other = Matrix(1, len(other), "external for now", "none") #make ndarray into a Matrix, can't alwas hardcode 1
-    return Matrix.modifyMatrix(self, other, '-')
+        if type(other) != Matrix: #need to add more cases
+                if type(other) == int:
+                    other = other
+                else: #it is a ndarray that needs to be converted
+                    other = Matrix(1, len(other), "external for now", "none") #make ndarray into a Matrix, can't alwas hardcode 1
+        return Matrix.modifyMatrix(self, other, '-')
 
-def __rsub__(self, other):
-    if type(self) == type(None):
-        self = 0
-        #return negated matrix
-    elif type(other) == type(None):
-        other = 0
-        #return negated matrix
+    def __rsub__(self, other):
+        if type(self) == type(None):
+            self = 0
+            #return negated matrix
+        elif type(other) == type(None):
+            other = 0
+            #return negated matrix
 
-    if type(other) != Matrix: #need to add more cases
-            if type(other) == int:
-                other = other
-            else: #ndarray that needs to be converted
-                other = Matrix(1, len(other), "external for now", "none") #make ndarray into a Matrix, can't alwas hardcode 1
-            
-    return Matrix.modifyMatrix(self, other, '-')
+        if type(other) != Matrix: #need to add more cases
+                if type(other) == int:
+                    other = other
+                else: #ndarray that needs to be converted
+                    other = Matrix(1, len(other), "external for now", "none") #make ndarray into a Matrix, can't alwas hardcode 1
+                
+        return Matrix.modifyMatrix(self, other, '-')
     
-def __radd__(self, other): #overload addition operator
-    return Matrix.modifyMatrix(self, other, '+')
+    def __radd__(self, other): #overload addition operator
+        return Matrix.modifyMatrix(self, other, '+')
 
-def __mul__(self, other): #overload multiplication operator
-    return Matrix.modifyMatrix(self, other, '*')
+    def __mul__(self, other): #overload multiplication operator
+        return Matrix.modifyMatrix(self, other, '*')
 
-def __rmul__(self, other): #overload multiplication operator
-    return Matrix.modifyMatrix(self, other, '*')
+    def __rmul__(self, other): #overload multiplication operator
+        return Matrix.modifyMatrix(self, other, '*')
 
-def __div__(self, other): #overload multiplication operator
-    return Matrix.modifyMatrix(self, other, '/')
+    def __div__(self, other): #overload multiplication operator
+        return Matrix.modifyMatrix(self, other, '/')
 
-def __rtruediv__(self, other): #overload multiplication operator
-    return Matrix.modifyMatrix(self, other, '/')
+    def __rtruediv__(self, other): #overload multiplication operator
+        return Matrix.modifyMatrix(self, other, '/')
 
-def __rfloordiv__(self, other): #overload multiplication operator
-    return Matrix.modifyMatrix(self, other, '/')
+    def __rfloordiv__(self, other): #overload multiplication operator
+        return Matrix.modifyMatrix(self, other, '/')
 
-def __neg__(self):
-    return Matrix.modifyMatrix(self, -1, '*')
+    def __neg__(self):
+        return Matrix.modifyMatrix(self, -1, '*')
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+    def __setitem__(self, idx, value):
+        self.data[idx] = value
 
 #np.for_loop(0, len(y_predicted), 1, lambda i: (
 #np.if_else(y_predicted[i] > 0.5, 1, 0, y_predicted[i])
@@ -128,7 +135,7 @@ def for_loop(start, obj, step, func): #see DOVE
     global opNum
     global loop_indx
     opNum += 1
-    index_var = Register.ForIndex
+    index_var = ForIndex()
     print("forloop [{}:{}:{}] \{}".format(start, obj, step, index_var.iD)) #creates new forindex variable
     func(index_var)
     print("endloop \{}".format(loop_indx))
@@ -137,23 +144,18 @@ def for_loop(start, obj, step, func): #see DOVE
 def if_else(cond, path_one, path_two): #optional arg for value i in case this is in a for loop
     global opNum
     global reg_num #global counter for registers
-    #line 37ish in if
-    #wrap if true and if false
-    #result = if.false
-    print("condition in string form") #how to correctly output condition?
-    #other condition?
-    if type(path_two) == type(None):
-        print("select %{} {} {}".format(reg_num, path_one, reg_num))
-        #set as a register
-        #technically the else condition is like x = x... need to be explicit here??
-    else:
-        print("select %{} {} {} {}".format(reg_num, path_one, reg_num, path_two))
-
-    print("ifelse {} {} {}".format()) #condition, value
-    #save result in like %2
-    print("update y i %2")
+    #figure out what type cond, path_one and path_two are: matrix, value, register
     
-
+    print("ifelse %{} %{} %{}".format(str(cond), str(path_one), str(path_two)))
+    #check if class of path_two is a matirx, if so, return result (path_two)
+    #else print a set statement and create new register
+    result = path_two
+    if type(path_two) == Matrix:
+        return result
+    else:
+        Register.modify_register() #set the result, store in register
+    #for ifelse statement just use tostring...
+    
 def zeros(shape): #shape is int or tuple of ints
     if isinstance(shape, int): #1D array
         m = Matrix(1, shape, None, "==") #file.write("def ${} [1:1] [1:{}]".format(opNum, shape))
