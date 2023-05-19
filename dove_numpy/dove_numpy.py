@@ -10,6 +10,9 @@ reg_num = 1
 TRANSCRIPT = "transcript.txt"
 file = open(TRANSCRIPT, "w")
 
+def __gt__(self, other):
+        return "> {} {}".format(self, other)
+
 class Register():
     def __init__(self):
         global reg_num
@@ -20,12 +23,30 @@ class Register():
         print("do something")  
         print("set %{}".format(self.iD))
 
+    def __str__(self):
+        print("{}{}d".format(0, 0)) #filler value for now
+
 class ForIndex(Register):
     def __init__(self):
         self.iD = loop_indx
+        self.name = ""
+        self.row = 0
+        self.col = 0
+
+    def new_index(self, name, row, col):
+        self.name = name
+        self.row = row
+        self.col = col
+    
+    def __str__(self):
+        print("${}@({},{})".format(self.iD, self.row, self.col))
+
+    def __repr__(self):
+        return self.iD
     
     #soon, overload add, sub, etc
 
+        
 
 class Matrix():
     def __init__(self, row, col, name = None, operation = None):
@@ -41,6 +62,9 @@ class Matrix():
             print("def ${} [1:{}] [1:{}]\n\t{} ".format(self.iD, self.row, self.col, self.operation), end = ' ')
         else: #case where external data is used... I think
              print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iD, self.row, self.col, self.name, self.iD))
+
+    def __str__(self):
+        return "${}".format(self.iD)
 
     def modifyMatrix(self, operand, operation):
         global opNum
@@ -101,6 +125,7 @@ class Matrix():
                 
         return Matrix.modifyMatrix(self, other, '-')
     
+
     def __radd__(self, other): #overload addition operator
         return Matrix.modifyMatrix(self, other, '+')
 
@@ -122,11 +147,25 @@ class Matrix():
     def __neg__(self):
         return Matrix.modifyMatrix(self, -1, '*')
 
-    def __getitem__(self, idx):
-        return self.data[idx]
+    def __getitem__(self, *args): #idx can be a tuple I think
+        first = args[0]
+        if type(first) == type(str):
+            print("placeholder")
+        #self is a Matrix
+        #idx is a ForIndex object
+
+        #if type(idx) == type(int):
+            #return "${}@(1,{})".format(self.iD, idx) 
+        #else:  
+            #return "${}@({},{})".format(self.iD, idx, idx)
+        return ForIndex.new_index(self,)
 
     def __setitem__(self, idx, value):
-        self.data[idx] = value
+        global opNum
+        if type(idx) == type(int):
+            return "update ${} [1] [{}] %{}".format(self.iD, idx, opNum) 
+        else:
+            return "update ${} [{}] [{}] %{}".format(self.iD, idx, idx, opNum) 
 
 #np.for_loop(0, len(y_predicted), 1, lambda i: (
 #np.if_else(y_predicted[i] > 0.5, 1, 0, y_predicted[i])
@@ -136,7 +175,7 @@ def for_loop(start, obj, step, func): #see DOVE
     global loop_indx
     opNum += 1
     index_var = ForIndex()
-    print("forloop [{}:{}:{}] \{}".format(start, obj, step, index_var.iD)) #creates new forindex variable
+    print("forloop [{}:{}:{}] \{}".format(start, obj.col, step, index_var.iD)) #creates new forindex variable
     func(index_var)
     print("endloop \{}".format(loop_indx))
 
@@ -145,7 +184,6 @@ def if_else(cond, path_one, path_two): #optional arg for value i in case this is
     global opNum
     global reg_num #global counter for registers
     #figure out what type cond, path_one and path_two are: matrix, value, register
-    
     print("ifelse %{} %{} %{}".format(str(cond), str(path_one), str(path_two)))
     #check if class of path_two is a matirx, if so, return result (path_two)
     #else print a set statement and create new register
