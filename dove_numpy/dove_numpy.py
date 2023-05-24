@@ -10,9 +10,6 @@ reg_num = 1
 TRANSCRIPT = "transcript.txt"
 file = open(TRANSCRIPT, "w")
 
-def __gt__(self, other):
-        return "> {} {}".format(self, other)
-
 class Register():
     def __init__(self):
         global reg_num
@@ -25,21 +22,25 @@ class Register():
 
     def __str__(self):
         print("{}{}d".format(0, 0)) #filler value for now
-
-class ForIndex(Register):
-    def __init__(self):
-        self.iD = loop_indx
-        self.name = ""
-        self.row = 0
-        self.col = 0
-
-    def new_index(self, name, row, col):
+    
+class Pointer():
+    def __init__(self, name, row, col):
         self.name = name
         self.row = row
         self.col = col
-    
+
     def __str__(self):
         print("${}@({},{})".format(self.iD, self.row, self.col))
+    
+
+class ForIndex():
+    def __init__(self):
+        global loop_indx
+        self.iD = loop_indx
+        loop_indx += 1
+
+    def new_index(self):
+        return ForIndex(self)
 
     def __repr__(self):
         return self.iD
@@ -147,37 +148,34 @@ class Matrix():
     def __neg__(self):
         return Matrix.modifyMatrix(self, -1, '*')
 
-    def __getitem__(self, *args): #idx can be a tuple I think
+    def __getitem__(self, *args): #idx can be a tuple I think, this is for accessing a matrix
+        print("getitem function")
         first = args[0]
         if type(first) == type(str):
             print("placeholder")
-        #self is a Matrix
-        #idx is a ForIndex object
-
         #if type(idx) == type(int):
             #return "${}@(1,{})".format(self.iD, idx) 
         #else:  
             #return "${}@({},{})".format(self.iD, idx, idx)
-        return ForIndex.new_index(self,)
+        return ForIndex.new_index(self, self.name, 2, 2) #self.row #self.col
 
-    def __setitem__(self, idx, value):
+    def __setitem__(self, idx, value): #no return
         global opNum
+        ForIndex.new_index(self, self.name, self.row, self.col)
         if type(idx) == type(int):
-            return "update ${} [1] [{}] %{}".format(self.iD, idx, opNum) 
+            print("update ${} [1] [{}] %{}".format(self.iD, idx, opNum))
         else:
-            return "update ${} [{}] [{}] %{}".format(self.iD, idx, idx, opNum) 
-
-#np.for_loop(0, len(y_predicted), 1, lambda i: (
-#np.if_else(y_predicted[i] > 0.5, 1, 0, y_predicted[i])
+            print("update ${} [{}] [{}] %{}".format(self.iD, idx, idx, opNum))
+         
 
 def for_loop(start, obj, step, func): #see DOVE
     global opNum
     global loop_indx
     opNum += 1
-    index_var = ForIndex()
+    index_var = ForIndex.new_index(obj, obj.iD, 1, j) #for right
     print("forloop [{}:{}:{}] \{}".format(start, obj.col, step, index_var.iD)) #creates new forindex variable
     func(index_var)
-    print("endloop \{}".format(loop_indx))
+    print("endloop \{}".format(index_var.iD))
 
 
 def if_else(cond, path_one, path_two): #optional arg for value i in case this is in a for loop
@@ -193,6 +191,9 @@ def if_else(cond, path_one, path_two): #optional arg for value i in case this is
     else:
         Register.modify_register() #set the result, store in register
     #for ifelse statement just use tostring...
+
+def __gt__(self, other): 
+        return "> {} {}".format(self, other)
     
 def zeros(shape): #shape is int or tuple of ints
     if isinstance(shape, int): #1D array
