@@ -10,14 +10,14 @@ reg_num = 1
 TRANSCRIPT = "transcript.txt"
 file = open(TRANSCRIPT, "w")
 
+
 class Register():
     def __init__(self):
         global reg_num
         self.iD = reg_num
         reg_num += 1
     
-    def modify_register(self):
-        print("do something")  
+    def modify_register(self):  
         print("set %{}".format(self.iD))
 
     def __str__(self):
@@ -40,10 +40,13 @@ class ForIndex():
         loop_indx += 1
 
     def new_index(self):
-        return ForIndex(self)
+        return ForIndex()
 
     def __repr__(self):
-        return self.iD
+        return str(self.iD)
+    
+    def __gt__(self, other): 
+        return "> {} {}".format(self, other)
     
     #soon, overload add, sub, etc
 
@@ -149,7 +152,6 @@ class Matrix():
         return Matrix.modifyMatrix(self, -1, '*')
 
     def __getitem__(self, *args): #idx can be a tuple I think, this is for accessing a matrix
-        print("getitem function")
         first = args[0]
         if type(first) == type(str):
             print("placeholder")
@@ -157,22 +159,22 @@ class Matrix():
             #return "${}@(1,{})".format(self.iD, idx) 
         #else:  
             #return "${}@({},{})".format(self.iD, idx, idx)
-        return ForIndex.new_index(self, self.name, 2, 2) #self.row #self.col
+        return ForIndex.new_index(self) #self.row #self.col
 
     def __setitem__(self, idx, value): #no return
         global opNum
-        ForIndex.new_index(self, self.name, self.row, self.col)
+        ForIndex.new_index(self)
         if type(idx) == type(int):
             print("update ${} [1] [{}] %{}".format(self.iD, idx, opNum))
         else:
             print("update ${} [{}] [{}] %{}".format(self.iD, idx, idx, opNum))
-         
 
 def for_loop(start, obj, step, func): #see DOVE
     global opNum
     global loop_indx
     opNum += 1
-    index_var = ForIndex.new_index(obj, obj.iD, 1, j) #for right
+    v = ForIndex()
+    index_var = v.new_index() 
     print("forloop [{}:{}:{}] \{}".format(start, obj.col, step, index_var.iD)) #creates new forindex variable
     func(index_var)
     print("endloop \{}".format(index_var.iD))
@@ -189,11 +191,9 @@ def if_else(cond, path_one, path_two): #optional arg for value i in case this is
     if type(path_two) == Matrix:
         return result
     else:
-        Register.modify_register() #set the result, store in register
+        r = Register()
+        r.modify_register() #set the result, store in register
     #for ifelse statement just use tostring...
-
-def __gt__(self, other): 
-        return "> {} {}".format(self, other)
     
 def zeros(shape): #shape is int or tuple of ints
     if isinstance(shape, int): #1D array
@@ -226,14 +226,14 @@ def exp(values): #values is a Matrix
     print("update exp ${}".format(values.iD))
     return tmp
 
-#def array(data): #can accept like any object... add options later
-    #if isinstance(data, int): #1D array
-        #m = Matrix(1, shape, None, "==") #file.write("def ${} [1:1] [1:{}]".format(opNum, shape))
-    #else: #2D
-        #m = Matrix(data[0], data[1], None, "==") #file.write("def ${} [1:{}] [1:{}]".format(opNum, shape[1], shape[2])) 
-    #print("#0\nend ${}".format(opNum)) #file.write
+def array(data): #can accept like any object... add options later
+    if isinstance(data, int): #1D array
+        m = Matrix(1, shape, None, "==") #file.write("def ${} [1:1] [1:{}]".format(opNum, shape))
+    else: #2D
+        m = Matrix(data[0], data[1], None, "==") #file.write("def ${} [1:{}] [1:{}]".format(opNum, shape[1], shape[2])) 
+    print("#0\nend ${}".format(opNum)) #file.write
 
-#deal with ifelse statements
+
 
     
     
