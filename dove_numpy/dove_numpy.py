@@ -2,7 +2,7 @@
 #in other file: import dove.numpy as np
 #logistic regression
 #zeros, dot, sum, exp, array
-#import numpy as np
+import numpy as np
 
 opNum = 1 #total number of operations
 loop_indx = 1 #renam
@@ -17,11 +17,11 @@ class Register():
         self.iD = reg_num
         reg_num += 1
     
-    def modify_register(self):  
+    def __str__(self):  
         print("set %{}".format(self.iD))
 
-    def __str__(self):
-        print("{}{}d".format(0, 0)) #filler value for now
+    #def __str__(self):
+        #print("{}{}d".format(0, 0)) #filler value for now
     
 class Pointer():
     def __init__(self, name, row, col):
@@ -77,10 +77,10 @@ class Matrix():
                 tmp = self
                 return tmp 
             elif (type(operand) == int) or (type(operand) == float):
-                tmp = Matrix(self.shape[0], self.shape[1], None, operation) #should be 455, 30
+                tmp = Matrix(np.shape(self)[0], np.shape(self)[1], None, operation) #should be 455, 30
                 print("${} #{}\nend ${}".format(self.iD, operand, tmp.iD))
             else:
-                tmp = Matrix(self.shape[0], operand.shape[1], None, operation) #should be 455, 30
+                tmp = Matrix(np.shape(self)[0], np.shape(operand)[0], None, operation) #should be 455, 30
                 print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
         else:
             if type(operand) == type(None): 
@@ -192,7 +192,7 @@ def if_else(cond, path_one, path_two): #optional arg for value i in case this is
         return result
     else:
         r = Register()
-        r.modify_register() #set the result, store in register
+        return r #set the result, store in register
     #for ifelse statement just use tostring...
     
 def zeros(shape): #shape is int or tuple of ints
@@ -204,22 +204,26 @@ def zeros(shape): #shape is int or tuple of ints
 
 def dot(item1, item2): 
     if type(item2) == type(None):
-        m = Matrix(item1.shape[0], item1.shape[1], 'placeholder', None) #taking in numpy nd array
+        m = Matrix(np.shape(item1)[0], np.shape(item1)[1], 'placeholder', None) #taking in numpy nd array
         n = None
     else:
-        m = Matrix(item1.shape[0], item1.shape[1], 'placeholder', None)
-        n = Matrix(item2.shape[0], item2.shape[1], 'placeholder', None)
+        m = Matrix(np.shape(item1)[0], np.shape(item1)[1], 'placeholder', None)
+        n = Matrix(np.shape(item2)[0], np.shape(item2)[0], 'placeholder', None)
     #now actual dot operations
     mn = Matrix.modifyMatrix(m, n, "*")
     return mn
 
 def sum(arr): #elements to sum, takes in array
     global opNum
+    if not any(arr):
+        arr = Matrix(0, 0, "placeholder", None)
+    if type(arr) != Matrix:
+         arr = Matrix(np.shape(arr)[0], np.shape(arr)[1], "placeholder", None)
     print("sum ${}".format(arr.iD))
-    print("set %{}".format(opNum))
-    return opNum
-    #print("update ${}".format(opNum)) don't think I need this
-
+    r = Register()
+    #print(r) #sets the value
+    return r.iD
+    
 def exp(values): #values is a Matrix
     tmp = Matrix.modifyMatrix(values, None, "^")
     print("set ${}".format(tmp.iD)) #<--def needs some fixing
@@ -227,11 +231,12 @@ def exp(values): #values is a Matrix
     return tmp
 
 def array(data): #can accept like any object... add options later
-    if isinstance(data, int): #1D array
-        m = Matrix(1, shape, None, "==") #file.write("def ${} [1:1] [1:{}]".format(opNum, shape))
-    else: #2D
-        m = Matrix(data[0], data[1], None, "==") #file.write("def ${} [1:{}] [1:{}]".format(opNum, shape[1], shape[2])) 
-    print("#0\nend ${}".format(opNum)) #file.write
+    if len(data) > 0 and len(data[0]) > 0:    
+        m = Matrix(len(data), len(data[0]), "name", None) 
+    else:
+        m = Matrix(0, 0, "name", None) #fix later
+    return m
+    
 
 
 
