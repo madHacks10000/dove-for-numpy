@@ -20,8 +20,6 @@ class Register():
     def __str__(self):  
         print("set %{}".format(self.iD))
 
-    #def __str__(self):
-        #print("{}{}d".format(0, 0)) #filler value for now
     
 class Pointer():
     def __init__(self, name, row, col):
@@ -30,7 +28,7 @@ class Pointer():
         self.col = col
 
     def __str__(self):
-        print("${}@({},{})".format(self.iD, self.row, self.col))
+        print("${}@({},{})".format(self.name, self.row, self.col))
     
 
 class ForIndex():
@@ -44,7 +42,7 @@ class ForIndex():
 
     def __repr__(self):
         return str(self.iD)
-    
+
     def __gt__(self, other): 
         return "> {} {}".format(self, other)
     
@@ -183,7 +181,6 @@ def for_loop(start, obj, step, func): #see DOVE
 def if_else(cond, path_one, path_two): #optional arg for value i in case this is in a for loop
     global opNum
     global reg_num #global counter for registers
-    #figure out what type cond, path_one and path_two are: matrix, value, register
     print("ifelse %{} %{} %{}".format(str(cond), str(path_one), str(path_two)))
     #check if class of path_two is a matirx, if so, return result (path_two)
     #else print a set statement and create new register
