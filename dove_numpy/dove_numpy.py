@@ -23,16 +23,24 @@ class Register():
     def __str__(self):  
         return "%{}".format(self.iD)
 
+    def __gt__(self, other): 
+        print("> {} {}".format(self, other))
+        r = Register()
+        r.new_reg()
+        return r
+
     
 class Pointer():
     def __init__(self, name, row, col):
         self.name = name
         self.row = row
         self.col = col
-    
+
     def new_ptr(self):
-        print("${}@({},{})".format(self.name, self.row, str(self.col)))
-        return Register().new_reg()
+        print("+ ${}@({},{})".format(self.name, self.row, str(self.col)))
+        r = Register()
+        r.new_reg()
+        return r
 
     def __str__(self):
         return "${}@({},{})".format(self.name, self.row, str(self.col))
@@ -167,14 +175,11 @@ class Matrix():
         if type(pos) == type(str):
             print("placeholder")
         if type(pos) == int:
-            p = Pointer(self.iD, 1, pos) #not sure why pos would be a single thing...
-            p.new_ptr()
+            p = Pointer(self.iD, 1, pos).new_ptr() #not sure why pos would be a single thing...
         elif type(pos) == ForIndex:
-            p = Pointer(self.iD, 1, ForIndex())
-            p.new_ptr()
+            p = Pointer(self.iD, 1, ForIndex()).new_ptr()
         else:  
-            p = Pointer(self.iD, pos[0], pos[1])
-            p.new_ptr()
+            p = Pointer(self.iD, pos[0], pos[1]).new_ptr()
         return p
 
     def __setitem__(self, idx, value): #no return
