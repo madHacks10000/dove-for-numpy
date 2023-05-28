@@ -17,8 +17,11 @@ class Register():
         self.iD = reg_num
         reg_num += 1
     
+    def new_reg(self):
+        print("set %{}".format(self.iD)) 
+
     def __str__(self):  
-        print("set %{}".format(self.iD))
+        return "%{}".format(self.iD)
 
     
 class Pointer():
@@ -26,10 +29,17 @@ class Pointer():
         self.name = name
         self.row = row
         self.col = col
+    
+    def new_ptr(self):
+        print("${}@({},{})".format(self.name, self.row, str(self.col)))
+        return Register().new_reg()
 
     def __str__(self):
-        print("${}@({},{})".format(self.name, self.row, self.col))
+        return "${}@({},{})".format(self.name, self.row, str(self.col))
     
+    def __gt__(self, other): 
+        print("> {} {}".format(self, other))
+        return Register()
 
 class ForIndex():
     def __init__(self):
@@ -41,10 +51,14 @@ class ForIndex():
         return ForIndex()
 
     def __repr__(self):
-        return str(self.iD)
+        return "\{}".format(self.iD)
+    
+    def __str__(self):
+        return "\{}".format(self.iD)
 
     def __gt__(self, other): 
-        return "> {} {}".format(self, other)
+        print("> {} {}".format(self, other))
+        return Register()
     
     #soon, overload add, sub, etc
 
@@ -149,19 +163,22 @@ class Matrix():
     def __neg__(self):
         return Matrix.modifyMatrix(self, -1, '*')
 
-    def __getitem__(self, *args): #idx can be a tuple I think, this is for accessing a matrix
-        first = args[0]
-        if type(first) == type(str):
+    def __getitem__(self, pos): 
+        if type(pos) == type(str):
             print("placeholder")
-        #if type(idx) == type(int):
-            #return "${}@(1,{})".format(self.iD, idx) 
-        #else:  
-            #return "${}@({},{})".format(self.iD, idx, idx)
-        return ForIndex.new_index(self) #self.row #self.col
+        if type(pos) == int:
+            p = Pointer(self.iD, 1, pos) #not sure why pos would be a single thing...
+            p.new_ptr()
+        elif type(pos) == ForIndex:
+            p = Pointer(self.iD, 1, ForIndex())
+            p.new_ptr()
+        else:  
+            p = Pointer(self.iD, pos[0], pos[1])
+            p.new_ptr()
+        return p
 
     def __setitem__(self, idx, value): #no return
         global opNum
-        ForIndex.new_index(self)
         if type(idx) == type(int):
             print("update ${} [1] [{}] %{}".format(self.iD, idx, opNum))
         else:
@@ -181,7 +198,11 @@ def for_loop(start, obj, step, func): #see DOVE
 def if_else(cond, path_one, path_two): #optional arg for value i in case this is in a for loop
     global opNum
     global reg_num #global counter for registers
-    print("ifelse %{} %{} %{}".format(str(cond), str(path_one), str(path_two)))
+    if type(path_one) == int:
+        path_one = "#{}".format(path_one)
+    if type(path_two) == int:
+        path_two = "#{}".format(path_two)
+    print("ifelse %{} {} {}".format(cond.iD, str(path_one), str(path_two)))
     #check if class of path_two is a matirx, if so, return result (path_two)
     #else print a set statement and create new register
     result = path_two
@@ -218,7 +239,7 @@ def sum(arr): #elements to sum, takes in array
          arr = Matrix(np.shape(arr)[0], np.shape(arr)[1], "placeholder", None)
     print("sum ${}".format(arr.iD))
     r = Register()
-    #print(r) #sets the value
+    r.new_reg()
     return r.iD
     
 def exp(values): #values is a Matrix
