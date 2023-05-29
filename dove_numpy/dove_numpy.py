@@ -220,23 +220,28 @@ def zeros(shape): #shape is int or tuple of ints
 
 def dot(item1, item2): 
     if type(item2) == type(None):
-        m = Matrix(np.shape(item1)[0], np.shape(item1)[1], None, "==") #taking in numpy nd array
+        print("1")
+        #m = Matrix(np.shape(item1)[0], np.shape(item1)[1], None, "==") #taking in numpy nd array
         n = None
-        return Matrix.modifyMatrix(m, n, "*")
+        #return Matrix.modifyMatrix(m, n, "*")
     elif type(item1) == type(None):
-        m = Matrix(np.shape(item2)[0], np.shape(item2)[1], None, "==") #taking in numpy nd array
-        n = None
-        return Matrix.modifyMatrix(m, n, "*")
+        print("2")
+        #m = Matrix(np.shape(item2)[0], np.shape(item2)[1], None, "==") #taking in numpy nd array
+        m = None
+        #return Matrix.modifyMatrix(m, n, "*")
 
-    if type(item1) != Matrix:
+    if type(item1) != Matrix and type(item1) != type(None):
+        print("3")
         m = Matrix(np.shape(item1)[0], np.shape(item1)[1], "sample", None)
-    else:
+    elif type(item1) == Matrix:
+        print("4")
         m = item1
-    if type(item2) != Matrix:
+    if type(item2) != Matrix and type(item2) != type(None):
+        print("5")
         n = Matrix(np.shape(item2)[0], np.shape(item2)[0], "sample", None)
-    else:
+    elif type(item2) == Matrix:
+        print("6")
         n = item2
-
     #now actual dot operation
     mn = Matrix.modifyMatrix(m, n, "*")
     return mn
@@ -260,9 +265,9 @@ def exp(values): #values is a Matrix
 
 def array(data): #can accept like any object... add options later
     if len(data) > 0 and len(data[0]) > 0:    
-        m = Matrix(len(data), len(data[0]), "name", None) 
+        m = Matrix(len(data), len(data[0]), "sample", None) 
     else:
-        m = Matrix(0, 0, "name", None) #fix later
+        m = Matrix(0, 0, "sample", None) #fix later
     return m
     
 
