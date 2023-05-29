@@ -29,7 +29,6 @@ class Register():
         r.new_reg()
         return r
 
-    
 class Pointer():
     def __init__(self, name, row, col):
         self.name = name
@@ -67,10 +66,6 @@ class ForIndex():
     def __gt__(self, other): 
         print("> {} {}".format(self, other))
         return Register()
-    
-    #soon, overload add, sub, etc
-
-        
 
 class Matrix():
     def __init__(self, row, col, name = None, operation = None):
@@ -130,7 +125,7 @@ class Matrix():
                 if type(other) == int:
                     other = other
                 else: #it is a ndarray that needs to be converted
-                    other = Matrix(1, len(other), "external for now", "none") #make ndarray into a Matrix, can't alwas hardcode 1
+                    other = Matrix(1, len(other), "sample", "none") #make ndarray into a Matrix, can't alwas hardcode 1
         return Matrix.modifyMatrix(self, other, '-')
 
     def __rsub__(self, other):
@@ -145,7 +140,7 @@ class Matrix():
                 if type(other) == int:
                     other = other
                 else: #ndarray that needs to be converted
-                    other = Matrix(1, len(other), "external for now", "none") #make ndarray into a Matrix, can't alwas hardcode 1
+                    other = Matrix(1, len(other), "sample", "none") #make ndarray into a Matrix, can't alwas hardcode 1
                 
         return Matrix.modifyMatrix(self, other, '-')
     
@@ -172,8 +167,6 @@ class Matrix():
         return Matrix.modifyMatrix(self, -1, '*')
 
     def __getitem__(self, pos): 
-        if type(pos) == type(str):
-            print("placeholder")
         if type(pos) == int:
             p = Pointer(self.iD, 1, pos).new_ptr() #not sure why pos would be a single thing...
         elif type(pos) == ForIndex:
@@ -227,12 +220,24 @@ def zeros(shape): #shape is int or tuple of ints
 
 def dot(item1, item2): 
     if type(item2) == type(None):
-        m = Matrix(np.shape(item1)[0], np.shape(item1)[1], 'placeholder', None) #taking in numpy nd array
+        m = Matrix(np.shape(item1)[0], np.shape(item1)[1], None, "==") #taking in numpy nd array
         n = None
+        return Matrix.modifyMatrix(m, n, "*")
+    elif type(item1) == type(None):
+        m = Matrix(np.shape(item2)[0], np.shape(item2)[1], None, "==") #taking in numpy nd array
+        n = None
+        return Matrix.modifyMatrix(m, n, "*")
+
+    if type(item1) != Matrix:
+        m = Matrix(np.shape(item1)[0], np.shape(item1)[1], "sample", None)
     else:
-        m = Matrix(np.shape(item1)[0], np.shape(item1)[1], 'placeholder', None)
-        n = Matrix(np.shape(item2)[0], np.shape(item2)[0], 'placeholder', None)
-    #now actual dot operations
+        m = item1
+    if type(item2) != Matrix:
+        n = Matrix(np.shape(item2)[0], np.shape(item2)[0], "sample", None)
+    else:
+        n = item2
+
+    #now actual dot operation
     mn = Matrix.modifyMatrix(m, n, "*")
     return mn
 
@@ -241,7 +246,7 @@ def sum(arr): #elements to sum, takes in array
     if not any(arr):
         arr = Matrix(0, 0, "placeholder", None)
     if type(arr) != Matrix:
-         arr = Matrix(np.shape(arr)[0], np.shape(arr)[1], "placeholder", None)
+         arr = Matrix(np.shape(arr)[0], np.shape(arr)[1], "sample", None)
     print("sum ${}".format(arr.iD))
     r = Register()
     r.new_reg()
