@@ -29,6 +29,12 @@ class Register():
         r.new_reg()
         return r
 
+    def __lt__(self, other): 
+        print("< {} {}".format(self, other))
+        r = Register()
+        r.new_reg()
+        return r
+
 class Pointer():
     def __init__(self, name, row, col):
         self.name = name
@@ -66,6 +72,19 @@ class ForIndex():
     def __gt__(self, other): 
         print("> {} {}".format(self, other))
         return Register()
+
+class Slice():
+    def __init__(self, matrix, start, end, step):
+        global opNum
+        self.iD = opNum
+        self.obj = matrix.iD #what is being sliced
+        self.start = start
+        self.end = end
+        self.step = step
+        opNum += 1
+
+    def new_slice(self): #matrix = thing to be sliced
+        print("slice const ${} [{}] [{}:{}:{}] ${}".format(self.obj, loop_indx, self.start, self.end, self.step, self.iD))
 
 class Matrix():
     def __init__(self, row, col, name = None, operation = None):
@@ -171,11 +190,14 @@ class Matrix():
             p = Pointer(self.iD, 1, pos).new_ptr() #not sure why pos would be a single thing...
         elif type(pos) == ForIndex:
             p = Pointer(self.iD, 1, ForIndex()).new_ptr()
+        elif type(pos) == slice:
+            p = Slice(self, pos.start, pos.end, pos.step).new_slice()
         else:  
             p = Pointer(self.iD, pos[0], pos[1]).new_ptr()
         return p
 
     def __setitem__(self, idx, value): #no return
+        print("setitem")
         global opNum
         if type(idx) == type(int):
             print("update ${} [1] [{}] %{}".format(self.iD, idx, opNum))
@@ -209,38 +231,29 @@ def if_else(cond, path_one, path_two): #optional arg for value i in case this is
     else:
         r = Register()
         return r #set the result, store in register
-    #for ifelse statement just use tostring...
     
+    
+#logistic regression
 def zeros(shape): #shape is int or tuple of ints
     if isinstance(shape, int): #1D array
-        m = Matrix(1, shape, None, "==") #file.write("def ${} [1:1] [1:{}]".format(opNum, shape))
+        m = Matrix(1, shape, None, "+") 
     else: #2D
-        m = Matrix(shape[0], shape[1], None, "==") #file.write("def ${} [1:{}] [1:{}]".format(opNum, shape[1], shape[2])) 
+        m = Matrix(shape[0], shape[1], None, "+") 
     print("#0\nend ${}".format(m.iD)) #file.write
 
 def dot(item1, item2): 
     if type(item2) == type(None):
-        print("1")
-        #m = Matrix(np.shape(item1)[0], np.shape(item1)[1], None, "==") #taking in numpy nd array
         n = None
-        #return Matrix.modifyMatrix(m, n, "*")
     elif type(item1) == type(None):
-        print("2")
-        #m = Matrix(np.shape(item2)[0], np.shape(item2)[1], None, "==") #taking in numpy nd array
         m = None
-        #return Matrix.modifyMatrix(m, n, "*")
 
     if type(item1) != Matrix and type(item1) != type(None):
-        print("3")
         m = Matrix(np.shape(item1)[0], np.shape(item1)[1], "sample", None)
     elif type(item1) == Matrix:
-        print("4")
         m = item1
     if type(item2) != Matrix and type(item2) != type(None):
-        print("5")
         n = Matrix(np.shape(item2)[0], np.shape(item2)[0], "sample", None)
     elif type(item2) == Matrix:
-        print("6")
         n = item2
     #now actual dot operation
     mn = Matrix.modifyMatrix(m, n, "*")
@@ -271,7 +284,71 @@ def array(data): #can accept like any object... add options later
     return m
     
 
+#Adaboost
+def ones(shape): #shape is int or tuple of ints
+    print("ones function")
+    if isinstance(shape, int): #1D array
+        m = Matrix(1, shape, None, "+") 
+    else: #2D
+        m = Matrix(shape[0], shape[1], None, "+") 
+    print("#1\nend ${}".format(m.iD)) #file.write
 
+def full(shape, fill_value): #will need to modify DOVE backend
+    print("in full")
+    if isinstance(shape, int): #1D array
+        m = Matrix(1, shape, None, "+")
+        print("#{}\nend ${}".format(fill_value, m.iD))
+    else: #2D
+        m = Matrix(shape[0], shape[1], None, "+")
+        print("#{}\nend ${}".format(fill_value, m.iD))
+        
+def unique(array): #requires backend modifications
+    if type(array) != Matrix and type(array) != type(None):
+        #Figure out dimensions of matrix
+        arr_np = np.array(array)
+        dimensions = arr_np.ndim
+        if dimensions == 2: #2D array
+            m = Matrix(np.shape(array)[0], np.shape(array)[1], "sample", None)
+            size = np.shape(array)[0] * np.shape(array)[1]
+        else: #1D
+            m = Matrix(1, np.shape(array)[0], "sample", None)
+            size = np.shape(array)[0]
+    else:
+        m = array
+    n = Matrix(1, size, None, "==") #length of new 1D matrix worst case
+    print("%{} unique\nend ${}".format(m.iD, n.iD))
+    return n
+
+def log(array): #natural log, element-wise
+    if type(array) != Matrix and type(array) != type(None):
+        arr_np = np.array(array)
+        dimensions = arr_np.ndim
+        if dimensions == 2: #2D array
+            m = Matrix(np.shape(array)[0], np.shape(array)[1], "sample", None)
+            size = np.shape(array)[0] * np.shape(array)[1]
+        else: #1D
+            m = Matrix(1, np.shape(array)[0], "sample", None)
+            size = np.shape(array)[0]
+    else:
+        m = array
+    n = Matrix(1, size, None, "+") #length of new 1D matrix worst case
+    print("%{} log\nend ${}".format(m.iD, n.iD))
+
+def sign(array): #requires changes to the backend
+    if type(array) != Matrix and type(array) != type(None):
+        arr_np = np.array(array)
+        dimensions = arr_np.ndim
+        if dimensions == 2: #2D array
+            m = Matrix(np.shape(array)[0], np.shape(array)[1], "sample", None)
+            size = np.shape(array)[0] * np.shape(array)[1]
+        else: #1D
+            m = Matrix(1, np.shape(array)[0], "sample", None)
+            size = np.shape(array)[0]
+    else:
+        m = array
+    n = Matrix(1, size, None, "+") #length of new 1D matrix worst case
+    print("%{} sign\nend ${}".format(m.iD, n.iD))
+    
 
     
     
