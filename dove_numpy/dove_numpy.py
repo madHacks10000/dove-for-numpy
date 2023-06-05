@@ -2,6 +2,7 @@
 #in other file: import dove.numpy as np
 #logistic regression
 #zeros, dot, sum, exp, array
+from xmlrpc.client import boolean
 import numpy as np
 
 matrix_num = 1 #total number of operations
@@ -83,18 +84,17 @@ class Slice():
 
     def new_slice(self): #matrix = thing to be sliced
         print(self.pos)
+        print("hi {}".format(type(self.pos[0])))
         print("slice const ${} [{}] [{}] ${}".format(self.obj, parse(self.pos[0]), parse(self.pos[1]), self.iD))
 
 def parse(seq):
-        if any(isinstance(x, ForIndex) for x in seq):
+        if type(seq) == ForIndex: #any(isinstance(x, ForIndex) for x in seq): 
             result = str(seq)
+        elif type(seq) == int: #might be missing a condition
+            result = "#" + str(int) 
         else:
-            if np.isnan(np.diff(seq)[0]):
-                result = str(seq[0])
-            elif np.all(np.diff(seq) == np.diff(seq)[0]):
-                result = "[{}:{}:{}]".format()
-            else:
-                print("placeholder")
+            result = "[{}:{}:{}]".format(1,1,1) #dimensions of original matrix
+
         return "[{}]".format(result)     
     
 
@@ -194,7 +194,7 @@ class Matrix():
     def __neg__(self):
         return Matrix.modifyMatrix(self, -1, '*')
 
-    def __getitem__(self, pos): 
+    def __getitem__(self, pos):
         if type(pos) == int:
             p = Pointer(self.iD, 1, pos).new_ptr() #not sure why pos would be a single thing...
         elif type(pos) == ForIndex:
@@ -205,12 +205,18 @@ class Matrix():
             p = Pointer(self.iD, pos[0], pos[1]).new_ptr()
         return p
 
-    def __setitem__(self, idx, value): #no return
+    def __setitem__(self, idx, value): #$2, False, -1
         global matrix_num
-        if type(idx) == type(int):
-            print("update ${} [1] [{}] %{}".format(self.iD, idx, matrix_num))
-        else:
-            print("update ${} [{}] [{}] %{}".format(self.iD, idx, idx, matrix_num))
+
+        if type(idx) == tuple: #ex (\1,\1)
+            if type(value) == int:
+                value = "#" + str(value)
+            print("update ${} [{}] [{}] {}".format(self.iD, str(idx[0]), str(idx[1]), str(value)))
+        elif type(idx) == bool:
+            m = Matrix.modifyMatrix(self, value, "==") #FIX
+            if type(value) == int:
+                value = "#" + str(value)
+            print("update ${} {} {}".format(self.iD, str(m), value))
 
 # General methods
 
@@ -306,10 +312,11 @@ def exp(values): #input is a Matrix
     return tmp
 
 def array(data): #can accept like any object... add options later
-    if len(data) > 0 and len(data[0]) > 0:    
-        m = Matrix(len(data), len(data[0]), "sample", None) 
-    else:
-        m = Matrix(0, 0, "sample", None) #fix later
+    if len(np.shape(data)) == 2: #2D array 
+        m = Matrix(np.shape(data)[0], np.shape(data)[1], "sample", None) 
+    else: #1D
+        m = Matrix(1, np.shape(data)[0], "sample", None) #fix later
+    #might need one more condition
     return m
     
 
