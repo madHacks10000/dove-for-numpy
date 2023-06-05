@@ -35,44 +35,52 @@ class Adaboost:
 
         # Initialize weights to 1/N
         w = np.full(n_samples, (1 / n_samples))
-
+        
         self.clfs = []
-
+        
         # Iterate through classifiers
-        for _ in range(self.n_clf):
+
+        def func_3(min_error):
+            # predict with polarity 1
+            p = 1
+            predictions = np.ones(n_samples)
+            #print(type(X_column)) #ndarray
+            #print(type(threshold)) #Register
+        
+            predictions[X_column < threshold] = -1
+
+            # Error = sum of weights of misclassified samples
+            misclassified = w[y != predictions]
+            error = sum(misclassified)
+
+            if error > 0.5:
+                error = 1 - error
+                p = -1
+
+            # store the best configuration
+            if error < min_error:
+                clf.polarity = p
+                clf.threshold = threshold
+                clf.feature_idx = feature_i
+                min_error = error
+
+        def func_2(n_samples, n_features, w, self.clfs, min_error):
+            X_column = X[:, feature_i] #ndarray
+            print(type(X[:, feature_i]))
+            
+            thresholds = np.unique(X_column)
+
+            #for threshold in thresholds:
+            np.for_loop(threshold, thresholds, 1, func_3(n_samples, n_features, w, self.clfs, min_error))
+                
+        
+        def func_1(n_samples, n_features, w, self.clfs):
             clf = DecisionStump()
             min_error = float("inf")
 
             # greedy search to find best threshold and feature
-            for feature_i in range(n_features): 
-                X_column = X[:, feature_i] #ndarray
-                print(type(X[:, feature_i]))
-                
-                thresholds = np.unique(X_column)
-
-                for threshold in thresholds:
-                    # predict with polarity 1
-                    p = 1
-                    predictions = np.ones(n_samples)
-                    #print(type(X_column)) #ndarray
-                    #print(type(threshold)) #Register
-                
-                    predictions[X_column < threshold] = -1
-
-                    # Error = sum of weights of misclassified samples
-                    misclassified = w[y != predictions]
-                    error = sum(misclassified)
-
-                    if error > 0.5:
-                        error = 1 - error
-                        p = -1
-
-                    # store the best configuration
-                    if error < min_error:
-                        clf.polarity = p
-                        clf.threshold = threshold
-                        clf.feature_idx = feature_i
-                        min_error = error
+            #for feature_i in range(n_features):
+            np.for_loop(feature_i, n_features, 1, func_2(n_samples, n_features, w, self.clfs, min_error))    
 
             # calculate alpha
             EPS = 1e-10
@@ -87,6 +95,10 @@ class Adaboost:
 
             # Save classifier
             self.clfs.append(clf)
+
+        #for _ in range(self.n_clf):
+        np.for_loop(0, self.n_clf, 1, func_1(n_samples, n_features, w, self.clfs))
+            
 
     def predict(self, X):
         clf_preds = [clf.alpha * clf.predict(X) for clf in self.clfs]

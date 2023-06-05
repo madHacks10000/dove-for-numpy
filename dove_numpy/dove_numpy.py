@@ -228,13 +228,17 @@ def wrap(obj, obj_type): #convert objects to dove_numpy objects, currently only 
             m = Matrix(1, np.shape(obj)[0], "sample", None)
         return m
 
-def for_loop(start, obj, step, func): #see DOVE
+def for_loop(start, end, step, func): #see DOVE
     global matrix_num
     global loop_indx
     matrix_num += 1
     v = ForIndex()
     index_var = v.new_index() 
-    print("forloop [{}:{}:{}] \{}".format(start, obj.col, step, index_var.iD)) #creates new forindex variable
+    if type(end) == int:
+        new_end = end
+    elif type(end) == Matrix:
+         new_end = end.col
+    print("forloop [{}:{}:{}] \{}".format(start, new_end, step, index_var.iD)) #creates new forindex variable
     func(index_var)
     print("endloop \{}".format(index_var.iD))
 

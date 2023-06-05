@@ -42,26 +42,16 @@ class LogisticRegression:
         #y_predicted_cls = [1 if i > 0.5 else 0 for i in y_predicted] <-- original statement
         y_predicted_cls = []
         
-        np.for_loop(0, y_predicted, 1, lambda i: (
+        def func(i):
             np.if_else(y_predicted[i] > 0.5, 1, 0)
-        ))
-            
-        #y_predicated_cls = []
+
+        np.for_loop(0, y_predicted, 1, func)
+
         #for i in y_predicated:
         #    if i > 0.5:
         #        y_predicated_cls.append(1)
         #    else:
         #        y_predicated_cl.append(0)
-        # dot representation:
-        # forloop [1:10:1] \1 <--- won't be 10, change later
-        # slice const $1 [\1] [\1] $3 
-        # set $4 <-- unclear from here down
-        # > $3 #0.5
-        # set $5
-        # == $3
-        # set $6
-        # ifelse $4 $6 <-- unclear, ask Tushaf
-        # endloop \1
         return np.array(y_predicted_cls)
 
     def _sigmoid(self, x):

@@ -1,1 +1,0 @@
-# dove-for-numpy
