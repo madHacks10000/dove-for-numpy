@@ -78,34 +78,41 @@ class Slice():
     def __init__(self, matrix, pos):
         global matrix_num
         self.iD = matrix_num
-        self.obj = matrix.iD #what is being sliced
+        self.obj = matrix #what is being sliced
         self.pos = pos
         matrix_num += 1
 
     def new_slice(self): #matrix = thing to be sliced
-        print(self.pos)
-        print("hi {}".format(type(self.pos[0])))
-        print("slice const ${} [{}] [{}] ${}".format(self.obj, parse(self.pos[0]), parse(self.pos[1]), self.iD))
+        print("slice const ${} {}${}".format(self.obj.iD, parse(self), self.iD))
+        return self
 
-def parse(seq):
+
+def parse(obj):
+    result = ''
+    for i in range(2):
+        seq = obj.pos[i]
         if type(seq) == ForIndex: #any(isinstance(x, ForIndex) for x in seq): 
-            result = str(seq)
+            result = "{}[{}] ".format(result, str(seq))
         elif type(seq) == int: #might be missing a condition
-            result = "#" + str(int) 
-        else:
-            result = "[{}:{}:{}]".format(1,1,1) #dimensions of original matrix
-
-        return "[{}]".format(result)     
+            result = "{}#{} ".format(result, seq)
+        elif type(seq) == slice:
+            if(seq.start == None):
+                if i == 1:
+                    dim = obj.obj.row
+                else:
+                    dim = obj.obj.col
+                result = "{}[{}:{}:{}] ".format(result, 1, dim, 1) #dimensions of original matrix
+    return result    
     
 
 class Matrix():
     def __init__(self, row, col, name = None, operation = None):
         global matrix_num
         self.name = name
-        self.iD = matrix_num #need in addition to global variable
+        self.iD = matrix_num 
         self.row = row
         self.col = col
-        self.shape = (row, col)
+        self.shape = (row, col) #don't think this is ever used
         self.operation = operation
         matrix_num += 1
         if self.name == None: #matrix will be modified as specified later on in the user's program
@@ -206,8 +213,8 @@ class Matrix():
         return p
 
     def __setitem__(self, idx, value): #$2, False, -1
+        #maybe use the parse function here...
         global matrix_num
-
         if type(idx) == tuple: #ex (\1,\1)
             if type(value) == int:
                 value = "#" + str(value)
@@ -226,9 +233,7 @@ def wrap(obj, obj_type): #convert objects to dove_numpy objects, currently only 
     elif type(obj) == type(None):
         return obj
     elif obj_type == Matrix: 
-        arr_np = np.array(obj) #is this okay?
-        dimensions = arr_np.ndim
-        if dimensions == 2: #2D array
+        if len(np.shape(obj)) == 2: #2D array
             m = Matrix(np.shape(obj)[0], np.shape(obj)[1], "sample", None)
         else: #1D
             m = Matrix(1, np.shape(obj)[0], "sample", None)
@@ -340,8 +345,9 @@ def full(shape, fill_value): #will need to modify DOVE backend
         print("#{}\nend ${}".format(fill_value, m.iD))
         
 def unique(array): #requires backend modifications
+    #returns Matrix of sorted unique values
     m = wrap(array, Matrix)
-    if m != type(None):
+    if type(m) != type(None):
         size = m.row * m.col
     else:
         size = 0
