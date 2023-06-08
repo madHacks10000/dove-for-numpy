@@ -43,6 +43,15 @@ class Register():
         r = Register()
         r.new_reg()
         return r
+    
+    def __sub__(self, other): #need 
+        if type(other) == int:
+            other = "#{}".format(other)
+        print("- {} {}".format(str(self), str(other)))
+        r = Register()
+        r.new_reg()
+        return r
+
 
 class Pointer():
     def __init__(self, name, row, col):
@@ -81,6 +90,8 @@ class ForIndex():
     def __gt__(self, other): 
         print("> {} {}".format(self, other))
         return Register()
+
+    
 
 class Slice():
     def __init__(self, matrix, pos):
@@ -273,20 +284,28 @@ def wrap(obj, obj_type): #convert objects to dove_numpy objects, currently only 
             m = Matrix(1, np.shape(obj)[0], "sample", None)
         return m
 
-def for_loop(start, end, step, func): #see DOVE
+def for_loop(start, end, step, obj): #obj is string ot function
     global matrix_num
     global loop_indx
     matrix_num += 1
-    v = ForIndex()
-    index_var = v.new_index() 
+    if type(obj) == ForIndex:
+        index_var = obj
     if type(end) == int:
         new_end = end
     elif type(end) == Matrix:
          new_end = end.col
     print("forloop [{}:{}:{}] \{}".format(start, new_end, step, index_var.iD)) #creates new forindex variable
-    func(index_var)
-    print("endloop \{}".format(index_var.iD))
+    if callable(obj):
+        obj(index_var)
+        print("endloop \{}".format(index_var.iD))
 
+def for_index(var):
+    var = ForIndex()
+    v = var.new_index()
+    return v
+
+def end_for(nested):
+    print("endloop \{}".format(loop_indx - nested))
 
 def if_else(cond, path_one, path_two): 
     global matrix_num
@@ -383,7 +402,12 @@ def unique(array): #requires backend modifications
     #returns Matrix of sorted unique values
     m = wrap(array, Matrix)
     if type(m) != type(None):
-        size = m.row * m.col
+        if type(m.row) == ForIndex: 
+            size = m.col
+        elif type(m.col) == ForIndex:
+            size = m.row
+        else:
+            size = m.row * m.col
     else:
         size = 0
     n = Matrix(1, size, None, "==") #flatten to 1D, worst case length
