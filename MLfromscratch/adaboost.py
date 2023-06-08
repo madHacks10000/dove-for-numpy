@@ -53,7 +53,7 @@ class Adaboost:
         feature_i = np.for_index(feature_i)
         np.for_loop(0, n_features, 1, feature_i)
         X_column = X[:, feature_i] #ndarray
-        print(type(X_column))
+        
         thresholds = np.unique(X_column)
 
         #for threshold in thresholds:
