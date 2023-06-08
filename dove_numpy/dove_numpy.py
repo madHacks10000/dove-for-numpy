@@ -35,6 +35,14 @@ class Register():
         r = Register()
         r.new_reg()
         return r
+    
+    def __rsub__(self, other): 
+        if type(other) == int:
+            other = "#{}".format(other)
+        print("- {} {}".format(str(self), str(other)))
+        r = Register()
+        r.new_reg()
+        return r
 
 class Pointer():
     def __init__(self, name, row, col):
@@ -87,10 +95,10 @@ class Slice():
         return self
 
 
-def parse(obj):
+def parse(obj, slice_obj):
     result = ''
     for i in range(2):
-        seq = obj.pos[i]
+        seq = obj[i]
         if type(seq) == ForIndex: #any(isinstance(x, ForIndex) for x in seq): 
             result = "{}[{}] ".format(result, str(seq))
         elif type(seq) == int: #might be missing a condition
@@ -98,27 +106,41 @@ def parse(obj):
         elif type(seq) == slice:
             if(seq.start == None):
                 if i == 1:
-                    dim = obj.obj.row
+                    dim = slice_obj.row
                 else:
-                    dim = obj.obj.col
+                    dim = slice_obj.col
                 result = "{}[{}:{}:{}] ".format(result, 1, dim, 1) #dimensions of original matrix
     return result    
     
 
 class Matrix():
-    def __init__(self, row, col, name = None, operation = None):
+    def __init__(self, row, col, name = None, operation = None, slice_obj = None):
         global matrix_num
-        self.name = name
         self.iD = matrix_num 
-        self.row = row
-        self.col = col
+
+        #case of slicing
+        if type(row) in (slice, tuple) or type(col) in (slice, tuple):
+            print("slice const ${} {}${}".format(slice_obj.iD, parse((row, col), slice_obj), self.iD))
+            if type(row) in (slice, tuple): #might need to fix later
+                self.row = slice_obj.row
+                self.col = col
+            else:
+                self.row = row
+                self.col = slice_obj.col
+        else:
+            self.row = row
+            self.col = col
+        self.name = name
         self.shape = (row, col) #don't think this is ever used
         self.operation = operation
         matrix_num += 1
-        if self.name == None: #matrix will be modified as specified later on in the user's program
-            print("def ${} [1:{}] [1:{}]\n\t{} ".format(self.iD, self.row, self.col, self.operation), end = ' ')
-        else: #case where external data is used... I think
-             print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iD, self.row, self.col, self.name, self.iD))
+
+        #if matrix isn't a slice
+        if slice_obj == None:
+            if self.name == None: #matrix will be modified as specified later on in the user's program
+                print("def ${} [1:{}] [1:{}]\n\t{} ".format(self.iD, self.row, self.col, self.operation), end = ' ')
+            else: #case where external data is used... I think
+                print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iD, self.row, self.col, self.name, self.iD))
 
     def __str__(self):
         return "${}".format(self.iD)
@@ -142,6 +164,9 @@ class Matrix():
             elif (type(operand) == int) or (type(operand) == float): #adding a constant
                 tmp = Matrix(self.row, self.col, None, operation)
                 print("${} #{}\nend ${}".format(self.iD, operand, tmp.iD))
+            elif (type(operand) == Register):
+                tmp = Matrix(self.row, self.col, None, operation)
+                print("${} %{}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
             else: #might need another case where both operands are integers
                 tmp = Matrix(self.row, self.col, None, operation)
                 print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
@@ -175,8 +200,7 @@ class Matrix():
                 if type(other) == int:
                     other = other
                 else: #ndarray that needs to be converted
-                    other = Matrix(1, len(other), "sample", "none") #make ndarray into a Matrix, can't alwas hardcode 1
-                
+                    other = Matrix(1, len(other), "sample", "none") #make ndarray into a Matrix, can't alwas hardcode 1   
         return Matrix.modifyMatrix(self, other, '-')
     
 
@@ -201,19 +225,26 @@ class Matrix():
     def __neg__(self):
         return Matrix.modifyMatrix(self, -1, '*')
 
+    def __ne__(self, other):
+        return Matrix.modifyMatrix(self, other, '!=')
+
     def __getitem__(self, pos):
         if type(pos) == int:
-            p = Pointer(self.iD, 1, pos).new_ptr() #not sure why pos would be a single thing...
+            p = Pointer(self.iD, 1, pos).new_ptr() #TODO: change later, temp fix
         elif type(pos) == ForIndex:
             p = Pointer(self.iD, 1, ForIndex()).new_ptr()
         elif type(pos) == tuple or type(pos) == slice: #slice
-            p = Slice(self, pos).new_slice()
+            #p = Slice(self, pos).new_slice()
+            p = Matrix(pos[0], pos[1], None, None, self)
+        elif type(pos) == Matrix:
+            p = Matrix.modifyMatrix(self, pos, "==")
         else:  
             p = Pointer(self.iD, pos[0], pos[1]).new_ptr()
         return p
 
     def __setitem__(self, idx, value): #$2, False, -1
-        #maybe use the parse function here...
+        #TODO: use the parse function here
+        #print("{} {} {}".format(self, idx, value))
         global matrix_num
         if type(idx) == tuple: #ex (\1,\1)
             if type(value) == int:
@@ -224,11 +255,14 @@ class Matrix():
             if type(value) == int:
                 value = "#" + str(value)
             print("update ${} {} {}".format(self.iD, str(m), value))
+        elif type(idx) == Register: #FIX 
+            m = Matrix.modifyMatrix(self, idx, "==")
+            print("update ${} {} {}".format(self.iD, str(m), value))
 
 # General methods
 
 def wrap(obj, obj_type): #convert objects to dove_numpy objects, currently only for Matrices
-    if type(obj) == type(obj_type): #obj_type
+    if type(obj) == obj_type: #obj_type
         return obj
     elif type(obj) == type(None):
         return obj
@@ -280,6 +314,7 @@ def zeros(shape): #shape is int or tuple of ints
     else: #2D
         m = Matrix(shape[0], shape[1], None, "+") 
     print("#0\nend ${}".format(m.iD)) #file.write
+    return m
 
 def dot(item1, item2): 
     if type(item2) == type(None):
@@ -301,14 +336,14 @@ def dot(item1, item2):
 
 def sum(arr): #elements to sum, takes in array
     global matrix_num
-    if not any(arr):
-        arr = Matrix(0, 0, "placeholder", None)
+    #if not any(arr):
+        #arr = Matrix(0, 0, "placeholder", None)
     if type(arr) != Matrix:
          arr = Matrix(np.shape(arr)[0], np.shape(arr)[1], "sample", None)
     print("sum ${}".format(arr.iD))
     r = Register()
     r.new_reg()
-    return r.iD
+    return r
     
 def exp(values): #input is a Matrix
     tmp = Matrix.modifyMatrix(values, None, "^")
@@ -328,21 +363,21 @@ def array(data): #can accept like any object... add options later
 # Adaboost
 
 def ones(shape): #shape is int or tuple of ints
-    print("ones function")
     if isinstance(shape, int): #1D array
         m = Matrix(1, shape, None, "+") 
     else: #2D
         m = Matrix(shape[0], shape[1], None, "+") 
     print("#1\nend ${}".format(m.iD)) #file.write
+    return m
 
 def full(shape, fill_value): #will need to modify DOVE backend
-    print("in full")
     if isinstance(shape, int): #1D array
         m = Matrix(1, shape, None, "+")
         print("#{}\nend ${}".format(fill_value, m.iD))
     else: #2D
         m = Matrix(shape[0], shape[1], None, "+")
         print("#{}\nend ${}".format(fill_value, m.iD))
+    return m
         
 def unique(array): #requires backend modifications
     #returns Matrix of sorted unique values
