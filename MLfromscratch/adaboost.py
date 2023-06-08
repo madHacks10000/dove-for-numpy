@@ -47,22 +47,22 @@ class Adaboost:
             # greedy search to find best threshold and feature
             for feature_i in range(n_features): 
                 X_column = X[:, feature_i] #ndarray
-                print(type(X[:, feature_i]))
 
                 thresholds = np.unique(X_column)
 
                 for threshold in thresholds:
                     # predict with polarity 1
                     p = 1
+                
                     predictions = np.ones(n_samples)
-                    #print(type(X_column)) #ndarray
+                
                     #print(type(threshold)) #Register
 
                     predictions[X_column < threshold] = -1
 
                     # Error = sum of weights of misclassified samples
                     misclassified = w[y != predictions]
-                    error = sum(misclassified)
+                    error = np.sum(misclassified) #used to be just sum(misclassified)
 
                     if error > 0.5:
                         error = 1 - error
@@ -115,14 +115,23 @@ if __name__ == "__main__":
     X, y = data.data, data.target
 
     # Manually convert
-    X = np.array(X)
-    y = np.array(y)
+    #X = np.array(X)
+    #y = np.array(y)
 
     y[y == 0] = -1
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=5
     )
+
+    #Temporary solution
+    X = np.array(X)
+    y = np.array(y)
+    X_train = np.array(X_train)
+    X_test = np.array(X_test)
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
+
     # Adaboost classification with 5 weak classifiers
     clf = Adaboost(n_clf=5)
     clf.fit(X_train, y_train)
