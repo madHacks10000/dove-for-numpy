@@ -40,54 +40,68 @@ class Adaboost:
         
         # Iterate through classifiers
 
-        for _ in range(self.n_clf):
-            clf = DecisionStump()
-            min_error = float("inf")
+        #for _ in range(self.n_clf):
+        loop_var = 0
+        loop_var = np.for_index(loop_var)
+        np.for_loop(0, self.n_clf, 1, loop_var)
+        clf = DecisionStump()
+        min_error = float("inf")
 
-            # greedy search to find best threshold and feature
-            for feature_i in range(n_features): 
-                X_column = X[:, feature_i] #ndarray
+        # greedy search to find best threshold and feature
+        #for feature_i in range(n_features):
+        feature_i = 0 
+        feature_i = np.for_index(feature_i)
+        np.for_loop(0, n_features, 1, feature_i)
+        X_column = X[:, feature_i] #ndarray
+        print(type(X_column))
+        thresholds = np.unique(X_column)
 
-                thresholds = np.unique(X_column)
+        #for threshold in thresholds:
+        threshold = 0
+        threshold = np.for_index(threshold)
+        np.for_loop(0, thresholds, 1, threshold)
+        # predict with polarity 1
+        p = 1
+    
+        predictions = np.ones(n_samples)
+    
+        #print(type(threshold)) #Register
 
-                for threshold in thresholds:
-                    # predict with polarity 1
-                    p = 1
-                
-                    predictions = np.ones(n_samples)
-                
-                    #print(type(threshold)) #Register
+        predictions[X_column < threshold] = -1
 
-                    predictions[X_column < threshold] = -1
+        # Error = sum of weights of misclassified samples
+        misclassified = w[y != predictions]
+        error = np.sum(misclassified) #used to be just sum(misclassified)
 
-                    # Error = sum of weights of misclassified samples
-                    misclassified = w[y != predictions]
-                    error = np.sum(misclassified) #used to be just sum(misclassified)
+        if error > 0.5:
+            error = 1 - error
+            p = -1
 
-                    if error > 0.5:
-                        error = 1 - error
-                        p = -1
+        # store the best configuration
+        if error < min_error:
+            clf.polarity = p
+            clf.threshold = threshold
+            clf.feature_idx = feature_i
+            min_error = error
 
-                    # store the best configuration
-                    if error < min_error:
-                        clf.polarity = p
-                        clf.threshold = threshold
-                        clf.feature_idx = feature_i
-                        min_error = error
+        np.end_for(0) #TODO: make this more efficient
+        np.end_for(1)
 
-            # calculate alpha
-            EPS = 1e-10
-            clf.alpha = 0.5 * np.log((1.0 - min_error + EPS) / (min_error + EPS))
+        # calculate alpha
+        EPS = 1e-10
+        clf.alpha = 0.5 * np.log((1.0 - min_error + EPS) / (min_error + EPS))
 
-            # calculate predictions and update weights
-            predictions = clf.predict(X)
+        # calculate predictions and update weights
+        predictions = clf.predict(X)
 
-            w *= np.exp(-clf.alpha * y * predictions)
-            # Normalize to one
-            w /= np.sum(w)
+        w *= np.exp(-clf.alpha * y * predictions)
+        # Normalize to one
+        w /= np.sum(w)
 
-            # Save classifier
-            self.clfs.append(clf)
+        # Save classifier
+        self.clfs.append(clf)
+        
+        np.end_for(2)
             
 
     def predict(self, X):
