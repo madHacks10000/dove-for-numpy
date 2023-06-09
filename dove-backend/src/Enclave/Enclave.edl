@@ -1,0 +1,15 @@
+enclave {
+    trusted {
+        /* define ECALLs here. */
+        public void ecall_load_data([in, count=scount] double* secrets, [in,string] const char* dataset_name, size_t num_rows, size_t num_cols, size_t scount);
+        public void ecall_dispatch();
+        public void ecall_parse([in, string] const char* transcript);
+    };
+
+    untrusted {
+        /* define OCALLs here. */
+        void ocall_print([in, string]const char* str);
+        void ocall_dump([in, size=len] double* result, size_t len);
+        void ocall_write_metadata([in, string]const char* str, int nrow, int ncol);
+    };
+};

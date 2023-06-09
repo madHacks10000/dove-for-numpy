@@ -1,0 +1,6 @@
+Enclave/external/libfixedtimefixedpoint/*.o
+Enclave/external/libfixedtimefixedpoint/*.a
+Enclave/external/libfixedtimefixedpoint/autogen.c
+Enclave/external/libfixedtimefixedpoint/base.h
+Enclave/external/libfixedtimefixedpoint/lut.h
+

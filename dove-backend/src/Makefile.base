@@ -1,0 +1,74 @@
+CXX=g++
+LIB_FTFP_FLAG ?= 1
+LIB_FTFP_PATH ?= Enclave/external/libfixedtimefixedpoint
+
+Enclave_Name := libenclave.so
+Enclave_Cpp_Files := $(wildcard Enclave/*.cpp) $(wildcard Enclave/parser/*.cpp) $(wildcard Enclave/binary/*.cpp) $(wildcard Enclave/unary/*.cpp)
+Enclave_Include_Paths := -IEnclave
+Enclave_Link_Flags := -shared
+
+ifeq ($(LIB_FTFP_FLAG), 1)
+	Enclave_Include_Paths += -I$(LIB_FTFP_PATH)
+endif
+
+Enclave_Cpp_Objects := $(Enclave_Cpp_Files:.cpp=.o)
+ 
+# Enclave_C_Flags := -Wall -pedantic -fpie -fPIC -fstack-protector -g -Og -DNOENCLAVE -Wno-literal-suffix $(Enclave_Include_Paths)
+Enclave_C_Flags := -Wall -pedantic -fpie -fPIC -fstack-protector -O2 -DNOENCLAVE -Wno-literal-suffix $(Enclave_Include_Paths)
+Enclave_Cpp_Flags := $(Enclave_C_Flags) -std=c++11
+
+ifeq ($(LIB_FTFP_FLAG), 1)
+	Enclave_Cpp_Flags += -DLIB_FTFP
+	Enclave_Link_Flags += -L$(LIB_FTFP_PATH)
+	Enclave_Link_Flags += -lftfp
+endif
+
+######## Enclave Objects ########
+
+$(LIB_FTFP_PATH)/libftfp.a:
+ifeq ($(LIB_FTFP_FLAG), 1)
+	@$(MAKE) -C $(LIB_FTFP_PATH)
+endif
+
+Enclave/%.o: Enclave/%.cpp
+	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@echo "CXX  <=  $<"
+
+$(Enclave_Name): $(LIB_FTFP_PATH)/libftfp.a $(Enclave_Cpp_Objects)
+ifeq ($(LIB_FTFP_FLAG), 1)
+	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
+else
+	@$(CXX) $(Enclave_Cpp_Objects) -o $@ $(Enclave_Link_Flags)
+endif
+	@echo "LINK =>  $@"
+
+######## App Objects ########
+
+App_Cpp_Files := App/App.cpp
+App_Include_Paths := -IApp
+
+# App_C_Flags := -Wall -Werror -pedantic -DNOENCLAVE -g -Og -fPIC -Wno-attributes $(App_Include_Paths)
+App_C_Flags := -Wall -Werror -pedantic -DNOENCLAVE -O2 -fPIC -Wno-attributes $(App_Include_Paths)
+App_Cpp_Flags := $(App_C_Flags) -std=c++11
+App_Cpp_Objects := $(App_Cpp_Files:.cpp=.o)
+App_Link_Flags := -L. -lenclave -Wl,-rpath=.
+
+App_Name := splitapp
+
+App/%.o: App/%.cpp
+	@$(CXX) $(App_Cpp_Flags) -c $< -o $@
+	@echo "CXX  <=  $<"
+
+$(App_Name): $(App_Cpp_Objects) $(Enclave_Name)
+	@$(CXX) $^ -o $@ $(App_Link_Flags)
+	@echo "LINK =>  $@"
+
+.PHONY: all
+
+all: $(Enclave_Name) $(App_Name)
+
+.PHONY: clean
+
+clean:
+	@rm -f $(App_Name) $(Enclave_Name) $(App_Cpp_Objects) $(Enclave_Cpp_Objects)
+	@$(MAKE) -C $(LIB_FTFP_PATH) clean

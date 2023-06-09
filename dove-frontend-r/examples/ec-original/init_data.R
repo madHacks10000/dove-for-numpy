@@ -1,0 +1,10 @@
+# spop <- rep(LETTERS[1:3],c(24,15,21))
+# geno <- matrix("snp.mat", nrow=2808570, ncol=60)
+# geno <- matrix("snp.mat", nrow=10000, ncol=60)
+spop <- rep(LETTERS[1:3],c(3,3,4))
+geno <- matrix("sample", nrow=10, ncol=10)
+
+#to.read = file("../../temp/sample.data", "rb")
+#geno <- readBin(to.read, double(), n = (10*10), endian = "little")
+#geno <- matrix(geno, nrow=10, ncol=10, byrow=TRUE)
+#close(to.read)
