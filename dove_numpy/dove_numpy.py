@@ -39,22 +39,73 @@ class Register():
     def __rsub__(self, other): 
         if type(other) == int:
             other = "#{}".format(other)
-        print("- {} {}".format(str(self), str(other)))
+        print("- {} {}".format(str(other), str(self)))
         r = Register()
         r.new_reg()
         return r
     
-    def __sub__(self, other): #need 
-        if type(other) == int:
+    def __sub__(self, other): 
+        if type(self) == int:
             other = "#{}".format(other)
         print("- {} {}".format(str(self), str(other)))
         r = Register()
         r.new_reg()
         return r
 
+    def __radd__(self, other):
+        if type(other) == int or type(other) == float: #TODO: how to avoid repetition
+            other = "#{}".format(other)
+        print("+ {} {}".format(str(other), str(self)))
+        r = Register()
+        r.new_reg()
+        return r
+
+    def __add__(self, other):
+        if type(other) == int:
+            other = "#{}".format(other)
+        print("+ {} {}".format(str(self), str(other)))
+        r = Register()
+        r.new_reg()
+        return r
+    
+    def __truediv__(self, other):
+        if type(other) == int:
+            other = "#{}".format(other)
+        print("/ {} {}".format(str(self), str(other)))
+        r = Register()
+        r.new_reg()
+        return r
+    
+    def __rtruediv__(self, other):
+        if type(other) == int:
+            other = "#{}".format(other)
+        print("/ {} {}".format(str(other), str(self)))
+        r = Register()
+        r.new_reg()
+        return r
+    
+    def __mul__(self, other):
+        if type(other) == int:
+            other = "#{}".format(other)
+        print("* {} {}".format(str(self), str(other)))
+        r = Register()
+        r.new_reg()
+        return r
+
+    def __rmul__(self, other):
+        if type(other) == int:
+            other = "#{}".format(other)
+        print("* {} {}".format(str(other), str(self)))
+        r = Register()
+        r.new_reg()
+        return r
+    
+    def __neg__(self):
+        return self * -1
+
 
 class Pointer():
-    def __init__(self, name, row, col):
+    def __init__(self, name, row, col): #TODO: modify structure of init and new_ptr
         self.name = name
         self.row = row
         self.col = col
@@ -91,23 +142,9 @@ class ForIndex():
         print("> {} {}".format(self, other))
         return Register()
 
-    
-
-class Slice():
-    def __init__(self, matrix, pos):
-        global matrix_num
-        self.iD = matrix_num
-        self.obj = matrix #what is being sliced
-        self.pos = pos
-        matrix_num += 1
-
-    def new_slice(self): #matrix = thing to be sliced
-        print("slice const ${} {}${}".format(self.obj.iD, parse(self), self.iD))
-        return self
-
-
 def parse(obj, slice_obj):
     result = ''
+
     for i in range(2):
         seq = obj[i]
         if type(seq) == ForIndex: #any(isinstance(x, ForIndex) for x in seq): 
@@ -128,7 +165,6 @@ class Matrix():
     def __init__(self, row, col, name = None, operation = None, slice_obj = None):
         global matrix_num
         self.iD = matrix_num 
-
         #case of slicing
         if type(row) in (slice, tuple) or type(col) in (slice, tuple):
             print("slice const ${} {}${}".format(slice_obj.iD, parse((row, col), slice_obj), self.iD))
@@ -166,12 +202,15 @@ class Matrix():
                 tmp = Matrix(np.shape(self)[0], np.shape(self)[1], None, operation) #should be 455, 30
                 print("${} #{}\nend ${}".format(self.iD, operand, tmp.iD))
             else:
-                tmp = Matrix(np.shape(self)[0], np.shape(operand)[0], None, operation) #should be 455, 30
-                print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
+                print("types: {} {} {}".format(self, operand, operation))
+                tmp = Matrix(np.shape(self)[0], np.shape(self)[1], None, operation) #should be 455, 30
+                print("${} {}\nend ${}".format(self.iD, str(operand), tmp.iD)) 
         else:
             if type(operand) == type(None): 
-                tmp = self
-                return tmp
+                #tmp = self
+                #return tmp
+                tmp = Matrix(self.row, self.col, None, operation)
+                print("{}\nend ${}".format(str(self), tmp.iD))
             elif (type(operand) == int) or (type(operand) == float): #adding a constant
                 tmp = Matrix(self.row, self.col, None, operation)
                 print("${} #{}\nend ${}".format(self.iD, operand, tmp.iD))
@@ -183,37 +222,22 @@ class Matrix():
                 print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
         return tmp
     
-    def __add__(self, other): #this is the correct indentation
+    def __add__(self, other): 
         return Matrix.modifyMatrix(self, other, '+')
 
-    def __sub__(self, other): #overload addition operator
+    def __sub__(self, other): 
         if type(self) == type(None):
             self = 0
         elif type(other) == type(None):
             other = 0
-
-        if type(other) != Matrix: #need to add more cases
-                if type(other) == int:
-                    other = other
-                else: #it is a ndarray that needs to be converted
-                    other = Matrix(1, len(other), "sample", "none") #make ndarray into a Matrix, can't alwas hardcode 1
         return Matrix.modifyMatrix(self, other, '-')
 
     def __rsub__(self, other):
         if type(self) == type(None):
             self = 0
-            #return negated matrix
         elif type(other) == type(None):
-            other = 0
-            #return negated matrix
-
-        if type(other) != Matrix: #need to add more cases
-                if type(other) == int:
-                    other = other
-                else: #ndarray that needs to be converted
-                    other = Matrix(1, len(other), "sample", "none") #make ndarray into a Matrix, can't alwas hardcode 1   
+            other = 0 
         return Matrix.modifyMatrix(self, other, '-')
-    
 
     def __radd__(self, other): #overload addition operator
         return Matrix.modifyMatrix(self, other, '+')
@@ -224,7 +248,7 @@ class Matrix():
     def __rmul__(self, other): #overload multiplication operator
         return Matrix.modifyMatrix(self, other, '*')
 
-    def __div__(self, other): #overload multiplication operator
+    def __truediv__(self, other): #overload multiplication operator
         return Matrix.modifyMatrix(self, other, '/')
 
     def __rtruediv__(self, other): #overload multiplication operator
@@ -255,13 +279,14 @@ class Matrix():
 
     def __setitem__(self, idx, value): #$2, False, -1
         #TODO: use the parse function here
-        #print("{} {} {}".format(self, idx, value))
         global matrix_num
         if type(idx) == tuple: #ex (\1,\1)
+            print("setitem tuple")
             if type(value) == int:
                 value = "#" + str(value)
             print("update ${} [{}] [{}] {}".format(self.iD, str(idx[0]), str(idx[1]), str(value)))
         elif type(idx) == bool:
+            print("setitem bool")
             m = Matrix.modifyMatrix(self, value, "==") #FIX
             if type(value) == int:
                 value = "#" + str(value)
@@ -269,6 +294,15 @@ class Matrix():
         elif type(idx) == Register: #FIX 
             m = Matrix.modifyMatrix(self, idx, "==")
             print("update ${} {} {}".format(self.iD, str(m), value))
+        
+    def append(self, element):
+        if type(element) == int or type(element) == float:
+            element = "#{}".format(element)
+        elif type(element) != Register: #this leaves us with custom objects
+            element = type(element).__name__
+        self.col = self.col + 1
+        print("update {} {}".format(str(self), str(element)))
+
 
 # General methods
 
@@ -289,19 +323,31 @@ def for_loop(start, end, step, obj): #obj is string ot function
     global loop_indx
     matrix_num += 1
     if type(obj) == ForIndex:
-        index_var = obj
+        index_var = " \{}".format(obj.iD)
+    elif type(obj) == Register:
+        index_var = ""
+
     if type(end) == int:
         new_end = end
     elif type(end) == Matrix:
          new_end = end.col
-    print("forloop [{}:{}:{}] \{}".format(start, new_end, step, index_var.iD)) #creates new forindex variable
+    print("forloop [{}:{}:{}]{}".format(start, new_end, step, index_var)) #creates new forindex variable
     if callable(obj):
-        obj(index_var)
+        obj(ForIndex())
         print("endloop \{}".format(index_var.iD))
 
 def for_index(var):
     var = ForIndex()
     v = var.new_index()
+    return v
+
+def make_ptr(matrix): #TODO: see if I even need this
+    matrix = wrap(matrix, Matrix)
+    if len(np.shape(matrix)) == 2:
+        var = Pointer(matrix.iD, ForIndex(), ForIndex())
+    else:
+        var = Pointer(matrix.iD, 1, ForIndex())
+    v = var.new_ptr()
     return v
 
 def end_for(nested):
@@ -353,21 +399,34 @@ def dot(item1, item2):
     mn = Matrix.modifyMatrix(m, n, "*")
     return mn
 
-def sum(arr): #elements to sum, takes in array
+def sum(arr, axis = None): #elements to sum, takes in array
     global matrix_num
     #if not any(arr):
         #arr = Matrix(0, 0, "placeholder", None)
-    if type(arr) != Matrix:
-         arr = Matrix(np.shape(arr)[0], np.shape(arr)[1], "sample", None)
-    print("sum ${}".format(arr.iD))
+    if axis != None:
+        axis_str = "_{} ".format(axis)
+    else:
+        axis_str = ""
+    
+    m = wrap(arr, Matrix)
+    #if type(arr) != Matrix:
+        #arr = Matrix(np.shape(arr)[0], np.shape(arr)[1], "sample", None)
+    print("sum{}${}".format(axis_str, m.iD)) #Backend modification
     r = Register()
     r.new_reg()
     return r
     
-def exp(values): #input is a Matrix
-    tmp = Matrix.modifyMatrix(values, None, "^")
-    print("set ${}".format(tmp.iD)) #<--def needs some fixing
-    print("update exp ${}".format(values.iD))
+def exp(obj): #input is a Matrix
+    if type(obj) == Register or type(obj) == int or type(obj) == float:
+        if type(obj) != Register:
+            obj = "#{}".format(obj)
+        print("exp {}".format(str(obj)))
+        r = Register()
+        r.new_reg()
+        return r
+    elif type(obj) == Matrix:
+        tmp = Matrix.modifyMatrix(obj, None, "exp")
+
     return tmp
 
 def array(data): #can accept like any object... add options later
@@ -414,29 +473,36 @@ def unique(array): #requires backend modifications
     print("%{} unique\nend ${}".format(m.iD, n.iD))
     return n
 
-def log(array): #natural log, element-wise
-    m = wrap(array, Matrix)
-    if m != type(None):
-        row = m.row
-        col = m.col
+def log(obj): #natural log, element-wise
+    if type(obj) == int or type(obj) == float or type(obj) == Register:
+        print("log {}".format(obj))
+        n = Register()
+        n.new_reg()
     else:
-        row = 0
-        col = 0
-    n = Matrix(row, col, None, "+") #length of new 1D matrix worst case
-    print("%{} log\nend ${}".format(m.iD, n.iD))
+        m = wrap(obj, Matrix)
+        if m != type(None):
+            row = m.row
+            col = m.col
+        else:
+            row = 0
+            col = 0
+        n = Matrix(row, col, None, "+") #length of new 1D matrix worst case
+        print("${} log\nend ${}".format(m.iD, n.iD))
     return n
 
 def sign(array):
-    m = wrap(array, Matrix)
-    if m != type(None):
-        row = m.row
-        col = m.col
+    if type(array) == Matrix:
+        n = Matrix(array.row, array.col, None, "+")
+        print("%{} sign\nend ${}".format(m.iD, n.iD))
+        return n
+    elif type(array) == Register:
+        print("sign {}".format(str(array)))
+        r = Register()
+        r.new_reg()
+        return r
     else:
-        row = 0
-        col = 0
-    n = Matrix(row, col, None, "+") #length of new 1D matrix worst case
-    print("%{} sign\nend ${}".format(m.iD, n.iD))
-    return n
+        return None
+    
     
 
 
