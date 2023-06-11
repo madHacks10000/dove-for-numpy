@@ -11,7 +11,6 @@ reg_num = 1
 TRANSCRIPT = "transcript.txt"
 file = open(TRANSCRIPT, "w")
 
-
 class Register():
     def __init__(self):
         global reg_num
@@ -131,9 +130,6 @@ class ForIndex():
 
     def new_index(self):
         return ForIndex()
-
-    def __repr__(self):
-        return "\{}".format(self.iD)
     
     def __str__(self):
         return "\{}".format(self.iD)
@@ -144,7 +140,6 @@ class ForIndex():
 
 def parse(obj, slice_obj):
     result = ''
-
     for i in range(2):
         seq = obj[i]
         if type(seq) == ForIndex: #any(isinstance(x, ForIndex) for x in seq): 
@@ -165,10 +160,11 @@ class Matrix():
     def __init__(self, row, col, name = None, operation = None, slice_obj = None):
         global matrix_num
         self.iD = matrix_num 
-        #case of slicing
+
+        # Case of slicing
         if type(row) in (slice, tuple) or type(col) in (slice, tuple):
             print("slice const ${} {}${}".format(slice_obj.iD, parse((row, col), slice_obj), self.iD))
-            if type(row) in (slice, tuple): #might need to fix later
+            if type(row) in (slice, tuple):
                 self.row = slice_obj.row
                 self.col = col
             else:
@@ -178,15 +174,15 @@ class Matrix():
             self.row = row
             self.col = col
         self.name = name
-        self.shape = (row, col) #don't think this is ever used
         self.operation = operation
+        self.shape = (row, col)
         matrix_num += 1
 
-        #if matrix isn't a slice
+        # If matrix isn't a slice
         if slice_obj == None:
-            if self.name == None: #matrix will be modified as specified later on in the user's program
+            if self.name == None: 
                 print("def ${} [1:{}] [1:{}]\n\t{} ".format(self.iD, self.row, self.col, self.operation), end = ' ')
-            else: #case where external data is used... I think
+            else: # External dataset
                 print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iD, self.row, self.col, self.name, self.iD))
 
     def __str__(self):
@@ -194,32 +190,13 @@ class Matrix():
 
     def modifyMatrix(self, operand, operation):
         global matrix_num
-        if operation == "*": #dot product
-            if type(operand) == type(None): 
-                tmp = self
-                return tmp 
-            elif (type(operand) == int) or (type(operand) == float):
-                tmp = Matrix(np.shape(self)[0], np.shape(self)[1], None, operation) #should be 455, 30
-                print("${} #{}\nend ${}".format(self.iD, operand, tmp.iD))
-            else:
-                print("types: {} {} {}".format(self, operand, operation))
-                tmp = Matrix(np.shape(self)[0], np.shape(self)[1], None, operation) #should be 455, 30
-                print("${} {}\nend ${}".format(self.iD, str(operand), tmp.iD)) 
+        if type(operand) == type(None): 
+            tmp = self
         else:
-            if type(operand) == type(None): 
-                #tmp = self
-                #return tmp
-                tmp = Matrix(self.row, self.col, None, operation)
-                print("{}\nend ${}".format(str(self), tmp.iD))
-            elif (type(operand) == int) or (type(operand) == float): #adding a constant
-                tmp = Matrix(self.row, self.col, None, operation)
-                print("${} #{}\nend ${}".format(self.iD, operand, tmp.iD))
-            elif (type(operand) == Register):
-                tmp = Matrix(self.row, self.col, None, operation)
-                print("${} %{}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
-            else: #might need another case where both operands are integers
-                tmp = Matrix(self.row, self.col, None, operation)
-                print("${} ${}\nend ${}".format(self.iD, operand.iD, tmp.iD)) 
+            if type(operand) == int or type(operand) == float:
+                operand = "#{}".format(operand)
+            tmp = Matrix(self.row, self.col, None, operation)
+            print("${} {}\nend ${}".format(self.iD, str(operand), tmp.iD)) 
         return tmp
     
     def __add__(self, other): 
@@ -239,22 +216,22 @@ class Matrix():
             other = 0 
         return Matrix.modifyMatrix(self, other, '-')
 
-    def __radd__(self, other): #overload addition operator
+    def __radd__(self, other):
         return Matrix.modifyMatrix(self, other, '+')
 
-    def __mul__(self, other): #overload multiplication operator
+    def __mul__(self, other): 
         return Matrix.modifyMatrix(self, other, '*')
 
-    def __rmul__(self, other): #overload multiplication operator
+    def __rmul__(self, other): 
         return Matrix.modifyMatrix(self, other, '*')
 
-    def __truediv__(self, other): #overload multiplication operator
+    def __truediv__(self, other): 
         return Matrix.modifyMatrix(self, other, '/')
 
-    def __rtruediv__(self, other): #overload multiplication operator
+    def __rtruediv__(self, other): 
         return Matrix.modifyMatrix(self, other, '/')
 
-    def __rfloordiv__(self, other): #overload multiplication operator
+    def __rfloordiv__(self, other):
         return Matrix.modifyMatrix(self, other, '/')
 
     def __neg__(self):
@@ -268,8 +245,7 @@ class Matrix():
             p = Pointer(self.iD, 1, pos).new_ptr() #TODO: change later, temp fix
         elif type(pos) == ForIndex:
             p = Pointer(self.iD, 1, ForIndex()).new_ptr()
-        elif type(pos) == tuple or type(pos) == slice: #slice
-            #p = Slice(self, pos).new_slice()
+        elif type(pos) == tuple or type(pos) == slice: # A slice is a Matrix
             p = Matrix(pos[0], pos[1], None, None, self)
         elif type(pos) == Matrix:
             p = Matrix.modifyMatrix(self, pos, "==")
@@ -277,28 +253,28 @@ class Matrix():
             p = Pointer(self.iD, pos[0], pos[1]).new_ptr()
         return p
 
-    def __setitem__(self, idx, value): #$2, False, -1
+    def __setitem__(self, idx, value):
         #TODO: use the parse function here
         global matrix_num
-        if type(idx) == tuple: #ex (\1,\1)
+        if type(idx) == tuple: # Ex (\1,\1)
             print("setitem tuple")
             if type(value) == int:
                 value = "#" + str(value)
             print("update ${} [{}] [{}] {}".format(self.iD, str(idx[0]), str(idx[1]), str(value)))
         elif type(idx) == bool:
             print("setitem bool")
-            m = Matrix.modifyMatrix(self, value, "==") #FIX
+            m = Matrix.modifyMatrix(self, value, "==") #TODO: FIX
             if type(value) == int:
                 value = "#" + str(value)
             print("update ${} {} {}".format(self.iD, str(m), value))
-        elif type(idx) == Register: #FIX 
+        elif type(idx) == Register: #TODO: FIX 
             m = Matrix.modifyMatrix(self, idx, "==")
             print("update ${} {} {}".format(self.iD, str(m), value))
         
     def append(self, element):
         if type(element) == int or type(element) == float:
             element = "#{}".format(element)
-        elif type(element) != Register: #this leaves us with custom objects
+        elif type(element) != Register: # Custom objects
             element = type(element).__name__
         self.col = self.col + 1
         print("update {} {}".format(str(self), str(element)))
@@ -306,35 +282,40 @@ class Matrix():
 
 # General methods
 
-def wrap(obj, obj_type): #convert objects to dove_numpy objects, currently only for Matrices
-    if type(obj) == obj_type: #obj_type
+def wrap(obj, obj_type): # Currently only for Matrices
+    if type(obj) == obj_type: 
         return obj
     elif type(obj) == type(None):
         return obj
     elif obj_type == Matrix: 
-        if len(np.shape(obj)) == 2: #2D array
+        if len(np.shape(obj)) == 2: # 2D array
             m = Matrix(np.shape(obj)[0], np.shape(obj)[1], "sample", None)
-        else: #1D
+        else: # 1D
             m = Matrix(1, np.shape(obj)[0], "sample", None)
         return m
 
-def for_loop(start, end, step, obj): #obj is string ot function
+def for_loop(start, end, step, obj): # Obj is string or function
     global matrix_num
     global loop_indx
     matrix_num += 1
     if type(obj) == ForIndex:
         index_var = " \{}".format(obj.iD)
-    elif type(obj) == Register:
+    elif type(obj) == Register or type(obj) == type(None):
         index_var = ""
-
+    elif callable(obj):
+        index_var = loop_indx
+    
     if type(end) == int:
         new_end = end
     elif type(end) == Matrix:
          new_end = end.col
-    print("forloop [{}:{}:{}]{}".format(start, new_end, step, index_var)) #creates new forindex variable
+
+    print("forloop [{}:{}:{}]{}".format(start, new_end, step, index_var)) 
+
     if callable(obj):
         obj(ForIndex())
-        print("endloop \{}".format(index_var.iD))
+        print("endloop {}".format(index_var))
+    return index_var
 
 def for_index(var):
     var = ForIndex()
@@ -350,8 +331,8 @@ def make_ptr(matrix): #TODO: see if I even need this
     v = var.new_ptr()
     return v
 
-def end_for(nested):
-    print("endloop \{}".format(loop_indx - nested))
+def end_for(indx):
+    print("endloop{}".format(indx))
 
 def if_else(cond, path_one, path_two): 
     global matrix_num
@@ -361,8 +342,6 @@ def if_else(cond, path_one, path_two):
     if type(path_two) == int:
         path_two = "#{}".format(path_two)
     print("ifelse %{} {} {}".format(cond.iD, str(path_one), str(path_two)))
-    #check if class of path_two is a matirx, if so, return result (path_two)
-    #else print a set statement and create new register
     result = path_two
     if type(path_two) == Matrix:
         return result
@@ -373,12 +352,12 @@ def if_else(cond, path_one, path_two):
     
 # Logistic regression
 
-def zeros(shape): #shape is int or tuple of ints
-    if isinstance(shape, int): #1D array
+def zeros(shape): # Shape is int or tuple of ints
+    if isinstance(shape, int): # 1D array
         m = Matrix(1, shape, None, "+") 
-    else: #2D
+    else: # 2D
         m = Matrix(shape[0], shape[1], None, "+") 
-    print("#0\nend ${}".format(m.iD)) #file.write
+    print("#0\nend ${}".format(m.iD)) # file.write
     return m
 
 def dot(item1, item2): 
@@ -395,28 +374,26 @@ def dot(item1, item2):
         n = Matrix(np.shape(item2)[0], np.shape(item2)[1], "sample", None)
     elif type(item2) == Matrix:
         n = item2
-    #dot operation
+
+    # Dot operation
     mn = Matrix.modifyMatrix(m, n, "*")
     return mn
 
-def sum(arr, axis = None): #elements to sum, takes in array
+def sum(arr, axis = None): # Elements to sum, takes in array
     global matrix_num
-    #if not any(arr):
-        #arr = Matrix(0, 0, "placeholder", None)
+
     if axis != None:
         axis_str = "_{} ".format(axis)
     else:
         axis_str = ""
     
     m = wrap(arr, Matrix)
-    #if type(arr) != Matrix:
-        #arr = Matrix(np.shape(arr)[0], np.shape(arr)[1], "sample", None)
-    print("sum{}${}".format(axis_str, m.iD)) #Backend modification
+    print("sum{}${}".format(axis_str, m.iD)) # Backend modification
     r = Register()
     r.new_reg()
     return r
     
-def exp(obj): #input is a Matrix
+def exp(obj): # Input is a Matrix
     if type(obj) == Register or type(obj) == int or type(obj) == float:
         if type(obj) != Register:
             obj = "#{}".format(obj)
@@ -429,26 +406,25 @@ def exp(obj): #input is a Matrix
 
     return tmp
 
-def array(data): #can accept like any object... add options later
-    if len(np.shape(data)) == 2: #2D array 
+def array(data): # TODO: fix
+    if len(np.shape(data)) == 2: # 2D array 
         m = Matrix(np.shape(data)[0], np.shape(data)[1], "sample", None) 
-    else: #1D
-        m = Matrix(1, np.shape(data)[0], "sample", None) #fix later
-    #might need one more condition
+    else: # 1D
+        m = Matrix(1, np.shape(data)[0], "sample", None)
     return m
     
 
 # Adaboost
 
-def ones(shape): #shape is int or tuple of ints
-    if isinstance(shape, int): #1D array
+def ones(shape): # Shape is int or tuple of ints
+    if isinstance(shape, int): # 1D array
         m = Matrix(1, shape, None, "+") 
-    else: #2D
+    else: # 2D
         m = Matrix(shape[0], shape[1], None, "+") 
-    print("#1\nend ${}".format(m.iD)) #file.write
+    print("#1\nend ${}".format(m.iD)) 
     return m
 
-def full(shape, fill_value): #will need to modify DOVE backend
+def full(shape, fill_value): # Will need to modify DOVE backend
     if isinstance(shape, int): #1D array
         m = Matrix(1, shape, None, "+")
         print("#{}\nend ${}".format(fill_value, m.iD))
@@ -457,8 +433,8 @@ def full(shape, fill_value): #will need to modify DOVE backend
         print("#{}\nend ${}".format(fill_value, m.iD))
     return m
         
-def unique(array): #requires backend modifications
-    #returns Matrix of sorted unique values
+def unique(array): # Requires backend modifications
+    # Returns Matrix of sorted unique values
     m = wrap(array, Matrix)
     if type(m) != type(None):
         if type(m.row) == ForIndex: 
@@ -469,11 +445,11 @@ def unique(array): #requires backend modifications
             size = m.row * m.col
     else:
         size = 0
-    n = Matrix(1, size, None, "==") #flatten to 1D, worst case length
+    n = Matrix(1, size, None, "==") # Flatten to 1D, worst case length
     print("%{} unique\nend ${}".format(m.iD, n.iD))
     return n
 
-def log(obj): #natural log, element-wise
+def log(obj): # Natural log, element-wise
     if type(obj) == int or type(obj) == float or type(obj) == Register:
         print("log {}".format(obj))
         n = Register()
@@ -486,7 +462,7 @@ def log(obj): #natural log, element-wise
         else:
             row = 0
             col = 0
-        n = Matrix(row, col, None, "+") #length of new 1D matrix worst case
+        n = Matrix(row, col, None, "+") 
         print("${} log\nend ${}".format(m.iD, n.iD))
     return n
 
