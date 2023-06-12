@@ -388,7 +388,7 @@ def sum(arr, axis = None): # Elements to sum, takes in array
         axis_str = ""
     
     m = wrap(arr, Matrix)
-    print("sum{}${}".format(axis_str, m.iD)) # Backend modification
+    print("sum {}${}".format(axis_str, m.iD)) # Backend modification
     r = Register()
     r.new_reg()
     return r
