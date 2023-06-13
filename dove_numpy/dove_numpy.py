@@ -560,7 +560,25 @@ def empty(shape):
     print("\nend ${}".format(m.iD))
     return m
 
-#argmin, mean
+def argmin(array): # Returns indices of the min values along an axis
+    print("min {}".format(array))
+    r = Register()
+    r.new_reg()
+    return r
+
+def mean(array, axis = None):
+    if axis != None:
+        m = Matrix(10, 10, None, "+")
+        print("${} mean\nend ${}".format(array.iD, m.iD))
+        return m
+    else:
+        print("mean {}".format(array))
+        r = Register()
+        r.new_reg()
+        return r
+
+
+
 
 
 
