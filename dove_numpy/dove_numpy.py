@@ -4,6 +4,7 @@
 #zeros, dot, sum, exp, array
 from xmlrpc.client import boolean
 import numpy as np
+from numpy import random
 
 matrix_num = 1 #total number of operations
 loop_indx = 1 #renam
@@ -185,10 +186,7 @@ class Matrix():
             else: # External dataset
                 print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iD, self.row, self.col, self.name, self.iD))
 
-    def __str__(self):
-        return "${}".format(self.iD)
-
-    def modifyMatrix(self, operand, operation):
+    def modify_matrix(self, operand, operation):
         global matrix_num
         if type(operand) == type(None): 
             tmp = self
@@ -198,47 +196,54 @@ class Matrix():
             tmp = Matrix(self.row, self.col, None, operation)
             print("${} {}\nend ${}".format(self.iD, str(operand), tmp.iD)) 
         return tmp
+
+    def __str__(self):
+        return "${}".format(self.iD)
+    
+    def __gt__(self, other): 
+        print("> {} {}".format(self, other))
+        return Matrix.modify_matrix(self, other, '>')
     
     def __add__(self, other): 
-        return Matrix.modifyMatrix(self, other, '+')
+        return Matrix.modify_matrix(self, other, '+')
 
     def __sub__(self, other): 
         if type(self) == type(None):
             self = 0
         elif type(other) == type(None):
             other = 0
-        return Matrix.modifyMatrix(self, other, '-')
+        return Matrix.modify_matrix(self, other, '-')
 
     def __rsub__(self, other):
         if type(self) == type(None):
             self = 0
         elif type(other) == type(None):
             other = 0 
-        return Matrix.modifyMatrix(self, other, '-')
+        return Matrix.modify_matrix(self, other, '-')
 
     def __radd__(self, other):
-        return Matrix.modifyMatrix(self, other, '+')
+        return Matrix.modify_matrix(self, other, '+')
 
     def __mul__(self, other): 
-        return Matrix.modifyMatrix(self, other, '*')
+        return Matrix.modify_matrix(self, other, '*')
 
     def __rmul__(self, other): 
-        return Matrix.modifyMatrix(self, other, '*')
+        return Matrix.modify_matrix(self, other, '*')
 
     def __truediv__(self, other): 
-        return Matrix.modifyMatrix(self, other, '/')
+        return Matrix.modify_matrix(self, other, '/')
 
     def __rtruediv__(self, other): 
-        return Matrix.modifyMatrix(self, other, '/')
+        return Matrix.modify_matrix(self, other, '/')
 
     def __rfloordiv__(self, other):
-        return Matrix.modifyMatrix(self, other, '/')
+        return Matrix.modify_matrix(self, other, '/')
 
     def __neg__(self):
-        return Matrix.modifyMatrix(self, -1, '*')
+        return Matrix.modify_matrix(self, -1, '*')
 
     def __ne__(self, other):
-        return Matrix.modifyMatrix(self, other, '!=')
+        return Matrix.modify_matrix(self, other, '!=')
 
     def __getitem__(self, pos):
         if type(pos) == int:
@@ -248,7 +253,7 @@ class Matrix():
         elif type(pos) == tuple or type(pos) == slice: # A slice is a Matrix
             p = Matrix(pos[0], pos[1], None, None, self)
         elif type(pos) == Matrix:
-            p = Matrix.modifyMatrix(self, pos, "==")
+            p = Matrix.modify_matrix(self, pos, "==")
         else:  
             p = Pointer(self.iD, pos[0], pos[1]).new_ptr()
         return p
@@ -263,12 +268,12 @@ class Matrix():
             print("update ${} [{}] [{}] {}".format(self.iD, str(idx[0]), str(idx[1]), str(value)))
         elif type(idx) == bool:
             print("setitem bool")
-            m = Matrix.modifyMatrix(self, value, "==") #TODO: FIX
+            m = Matrix.modify_matrix(self, value, "==") #TODO: FIX
             if type(value) == int:
                 value = "#" + str(value)
             print("update ${} {} {}".format(self.iD, str(m), value))
         elif type(idx) == Register: #TODO: FIX 
-            m = Matrix.modifyMatrix(self, idx, "==")
+            m = Matrix.modify_matrix(self, idx, "==")
             print("update ${} {} {}".format(self.iD, str(m), value))
         
     def append(self, element):
@@ -278,6 +283,7 @@ class Matrix():
             element = type(element).__name__
         self.col = self.col + 1
         print("update {} {}".format(str(self), str(element)))
+        
 
 
 # General methods
@@ -376,7 +382,7 @@ def dot(item1, item2):
         n = item2
 
     # Dot operation
-    mn = Matrix.modifyMatrix(m, n, "*")
+    mn = Matrix.modify_matrix(m, n, "*")
     return mn
 
 def sum(arr, axis = None): # Elements to sum, takes in array
@@ -402,7 +408,7 @@ def exp(obj): # Input is a Matrix
         r.new_reg()
         return r
     elif type(obj) == Matrix:
-        tmp = Matrix.modifyMatrix(obj, None, "exp")
+        tmp = Matrix.modify_matrix(obj, None, "exp")
 
     return tmp
 
@@ -446,7 +452,7 @@ def unique(array): # Requires backend modifications
     else:
         size = 0
     n = Matrix(1, size, None, "==") # Flatten to 1D, worst case length
-    print("%{} unique\nend ${}".format(m.iD, n.iD))
+    print("${} unique\nend ${}".format(m.iD, n.iD))
     return n
 
 def log(obj): # Natural log, element-wise
@@ -479,7 +485,83 @@ def sign(array):
     else:
         return None
     
+# Decision Tree
+
+def max(array): # Find max value of array
+    print("max ${}".format(array.iD))
+    r = Register()
+    r.new_reg()
+    return r
+
+def bincount(array): # Count number of occurrences of each value in array of non-negative ints
+    # Inefficient to use 'unique' syntax, need another backend modification
+    max_int = max(array)
+    m = Matrix(1, max_int, None, "+")
+    print("{} bincount\nend ${}".format(array.iD, m.iD)) #TODO: find better name than 'bincount'
+
+def log2(obj):
+    if type(obj) == int or type(obj) == float or type(obj) == Register:
+        print("log {}".format(obj))
+        n = Register()
+        n.new_reg()
+    else:
+        m = wrap(obj, Matrix)
+        if m != type(None):
+            row = m.row
+            col = m.col
+        else:
+            row = 0
+            col = 0
+        n = Matrix(row, col, None, "+") 
+        print("${} log2\nend ${}".format(m.iD, n.iD)) #TODO: figure out better syntax
+    return n
+
+def choice(obj, size=None, replace=True): # From numpy.random
+    # Generates a random sample from a given 1-D array
+    m = Matrix(1, obj, None, "+")
+    if type(obj) == int: #TODO: figure out format for printing params, need more than obj
+        params = "#{}".format(obj)
+    else:
+        params = "${}".format(obj.iD)
+    print("{} rand\nend ${}".format(params, m.iD))
+
+def argwhere(cond): # Find the indices of array elements that are non-zero, grouped by element.
+    # Input is like x > 1 where x is an array
+    m = Matrix(1, 10, None, "+") # TODO: properly set size, 1 and 10 are placeholders
+    print("${} argwhere\nend ${}".format(cond.iD, m.iD))
+    return m
+
+# Kmeans
+
+def seed(int): # From np.random
+    print("seed #{}") # TODO: change later because the seed should probably be protected...
+    r = Register()
+    r.new_reg()
+    return r
     
+def sqrt(obj):
+    if type(obj) == Matrix:
+        m = Matrix.modify_matrix(obj, None, "+")
+        print("${} sqrt\nend ${}".format(obj.iD, m.iD))
+        return m
+    else:
+        if type(obj) == int:
+            obj = "#{}".format(obj)
+        print("sqrt {}".format(obj))
+        r = Register()
+        r.new_reg()
+        return r
+
+def empty(shape):
+    if type(shape) == int:
+        m = Matrix(1, shape, None, "empty")
+    else:
+        m = Matrix(shape[0], shape[1], None, "empty")
+    print("\nend ${}".format(m.iD))
+    return m
+
+#argmin, mean
+
 
 
     

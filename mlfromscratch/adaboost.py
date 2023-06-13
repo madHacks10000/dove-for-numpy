@@ -16,6 +16,7 @@ class DecisionStump:
         n_samples = X.shape[0]
         X_column = X[:, self.feature_idx]
         predictions = np.ones(n_samples)
+        
         if self.polarity == 1:
             predictions[X_column < self.threshold] = -1
         else:
@@ -28,6 +29,7 @@ class Adaboost:
     def __init__(self, n_clf=5):
         self.n_clf = n_clf
         self.clfs = []
+        self.clfs = np.array(self.clfs)
 
     def fit(self, X, y):
         n_samples, n_features = X.shape
@@ -36,13 +38,14 @@ class Adaboost:
         w = np.full(n_samples, (1 / n_samples))
         
         self.clfs = []
-        
+        self.clfs = np.array(self.clfs)
+
         # Iterate through classifiers
 
         #for _ in range(self.n_clf):
         loop_var = 0
         loop_var = np.for_index(loop_var)
-        np.for_loop(0, self.n_clf, 1, loop_var)
+        loop1 = np.for_loop(0, self.n_clf, 1, loop_var)
         clf = DecisionStump()
         min_error = float("inf")
 
@@ -50,15 +53,15 @@ class Adaboost:
         #for feature_i in range(n_features):
         feature_i = 0 
         feature_i = np.for_index(feature_i)
-        np.for_loop(0, n_features, 1, feature_i)
+        loop2 = np.for_loop(0, n_features, 1, feature_i)
         X_column = X[:, feature_i] #ndarray
         
         thresholds = np.unique(X_column)
 
         #for threshold in thresholds:
         threshold = 0
-        threshold = np.for_index(threshold)
-        np.for_loop(0, thresholds, 1, threshold)
+        threshold = np.make_ptr(thresholds)
+        loop3 = np.for_loop(0, thresholds, 1, threshold)
         # predict with polarity 1
         p = 1
     
@@ -83,28 +86,44 @@ class Adaboost:
             clf.feature_idx = feature_i
             min_error = error
 
-        np.end_for(0) #TODO: make this more efficient
-        np.end_for(1)
+        np.end_for(loop1) #TODO: make this more efficient
+        np.end_for(loop2)
 
         # calculate alpha
         EPS = 1e-10
         clf.alpha = 0.5 * np.log((1.0 - min_error + EPS) / (min_error + EPS))
-
+        
         # calculate predictions and update weights
         predictions = clf.predict(X)
 
         w *= np.exp(-clf.alpha * y * predictions)
+       
         # Normalize to one
         w /= np.sum(w)
 
         # Save classifier
         self.clfs.append(clf)
         
-        np.end_for(2)
+        np.end_for(loop3)
             
 
     def predict(self, X):
-        clf_preds = [clf.alpha * clf.predict(X) for clf in self.clfs]
+        #clf_preds = [clf.alpha * clf.predict(X) for clf in self.clfs] 
+        #or:
+        #clf_preds = []
+        #for clf in self.clfs:
+            #prediction = clf.alpha * clf.predict(X)  # Calculate the prediction for current clf
+            #clf_preds.append(prediction)
+        
+        #self.clfs is a list
+        clf = 0
+        clf_preds = []
+        clf = np.make_ptr(self.clfs)
+        np.for_loop(0, self.clfs, 1, clf)
+        prediction = clf.alpha * clf.predict(X)
+        clf_preds.append(prediction)
+        np.end_for(0)
+
         y_pred = np.sum(clf_preds, axis=0)
         y_pred = np.sign(y_pred)
 
@@ -126,10 +145,6 @@ if __name__ == "__main__":
 
     data = datasets.load_breast_cancer()
     X, y = data.data, data.target
-
-    # Manually convert
-    #X = np.array(X)
-    #y = np.array(y)
 
     y[y == 0] = -1
 

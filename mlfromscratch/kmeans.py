@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
-import numpy as np
+import sys
+sys.path.append('../')
+import dove_numpy.dove_numpy as np
 
 np.random.seed(42)
 

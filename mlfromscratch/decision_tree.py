@@ -1,6 +1,8 @@
 from collections import Counter
 
-import numpy as np
+import sys
+sys.path.append('../')
+import dove_numpy.dove_numpy as np
 
 
 def entropy(y):
@@ -131,6 +133,13 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=1234
     )
+
+    X = np.array(X)
+    y = np.array(y)
+    X_train = np.array(X_train)
+    X_test = np.array(X_test)
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
 
     clf = DecisionTree(max_depth=10)
     clf.fit(X_train, y_train)
