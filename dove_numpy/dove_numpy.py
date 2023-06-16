@@ -1,7 +1,4 @@
 #dove.numpy
-#in other file: import dove.numpy as np
-#logistic regression
-#zeros, dot, sum, exp, array
 from xmlrpc.client import boolean
 import numpy as np
 from numpy import random
@@ -277,6 +274,7 @@ class Matrix():
             print("update ${} {} {}".format(self.iD, str(m), value))
         
     def append(self, element):
+        print("4")
         if type(element) == int or type(element) == float:
             element = "#{}".format(element)
         elif type(element) != Register: # Custom objects
@@ -300,7 +298,7 @@ def wrap(obj, obj_type): # Currently only for Matrices
             m = Matrix(1, np.shape(obj)[0], "sample", None)
         return m
 
-def for_loop(start, end, step, obj): # Obj is string or function
+def for_loop(start, end, step, func, obj, *args): # Obj is string or function
     global matrix_num
     global loop_indx
     matrix_num += 1
@@ -308,19 +306,15 @@ def for_loop(start, end, step, obj): # Obj is string or function
         index_var = " \{}".format(obj.iD)
     elif type(obj) == Register or type(obj) == type(None):
         index_var = ""
-    elif callable(obj):
-        index_var = loop_indx
-    
+
     if type(end) == int:
         new_end = end
     elif type(end) == Matrix:
          new_end = end.col
 
     print("forloop [{}:{}:{}]{}".format(start, new_end, step, index_var)) 
-
-    if callable(obj):
-        obj(ForIndex())
-        print("endloop {}".format(index_var))
+    func(obj, *args) #obj and *args
+    print("endloop {}".format(index_var))
     return index_var
 
 def for_index(var):
@@ -452,7 +446,7 @@ def unique(array): # Requires backend modifications
     else:
         size = 0
     n = Matrix(1, size, None, "==") # Flatten to 1D, worst case length
-    print("${} unique\nend ${}".format(m.iD, n.iD))
+    print("unique ${}\nend ${}".format(m.iD, n.iD))
     return n
 
 def log(obj): # Natural log, element-wise
@@ -469,13 +463,13 @@ def log(obj): # Natural log, element-wise
             row = 0
             col = 0
         n = Matrix(row, col, None, "+") 
-        print("${} log\nend ${}".format(m.iD, n.iD))
+        print("log ${}\nend ${}".format(m.iD, n.iD))
     return n
 
 def sign(array):
     if type(array) == Matrix:
         n = Matrix(array.row, array.col, None, "+")
-        print("%{} sign\nend ${}".format(m.iD, n.iD))
+        print("sign ${}\nend ${}".format(m.iD, n.iD))
         return n
     elif type(array) == Register:
         print("sign {}".format(str(array)))
@@ -497,7 +491,7 @@ def bincount(array): # Count number of occurrences of each value in array of non
     # Inefficient to use 'unique' syntax, need another backend modification
     max_int = max(array)
     m = Matrix(1, max_int, None, "+")
-    print("{} bincount\nend ${}".format(array.iD, m.iD)) #TODO: find better name than 'bincount'
+    print("bincount {}\nend ${}".format(array.iD, m.iD)) #TODO: find better name than 'bincount'
 
 def log2(obj):
     if type(obj) == int or type(obj) == float or type(obj) == Register:
@@ -513,7 +507,7 @@ def log2(obj):
             row = 0
             col = 0
         n = Matrix(row, col, None, "+") 
-        print("${} log2\nend ${}".format(m.iD, n.iD)) #TODO: figure out better syntax
+        print("log2 ${}\nend ${}".format(m.iD, n.iD)) #TODO: figure out better syntax
     return n
 
 def choice(obj, size=None, replace=True): # From numpy.random
@@ -523,12 +517,12 @@ def choice(obj, size=None, replace=True): # From numpy.random
         params = "#{}".format(obj)
     else:
         params = "${}".format(obj.iD)
-    print("{} rand\nend ${}".format(params, m.iD))
+    print("rand {}\nend ${}".format(params, m.iD))
 
 def argwhere(cond): # Find the indices of array elements that are non-zero, grouped by element.
     # Input is like x > 1 where x is an array
     m = Matrix(1, 10, None, "+") # TODO: properly set size, 1 and 10 are placeholders
-    print("${} argwhere\nend ${}".format(cond.iD, m.iD))
+    print("argwhere ${}\nend ${}".format(cond.iD, m.iD))
     return m
 
 # Kmeans
@@ -542,7 +536,7 @@ def seed(int): # From np.random
 def sqrt(obj):
     if type(obj) == Matrix:
         m = Matrix.modify_matrix(obj, None, "+")
-        print("${} sqrt\nend ${}".format(obj.iD, m.iD))
+        print("sqrt ${}\nend ${}".format(obj.iD, m.iD))
         return m
     else:
         if type(obj) == int:
@@ -569,7 +563,7 @@ def argmin(array): # Returns indices of the min values along an axis
 def mean(array, axis = None):
     if axis != None:
         m = Matrix(10, 10, None, "+")
-        print("${} mean\nend ${}".format(array.iD, m.iD))
+        print("mean ${}\nend ${}".format(array.iD, m.iD))
         return m
     else:
         print("mean {}".format(array))
