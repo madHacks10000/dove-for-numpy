@@ -21,6 +21,10 @@ class Register():
     def __str__(self):  
         return "%{}".format(self.iD)
 
+    #def __getattr__(self, name, value):
+        #print("get_attrrrrrrrrrrrrr {}".format(name))
+        #return "get_attrrrrrrrrrrrrr {}".format(name)
+
     def __gt__(self, other): 
         print("> {} {}".format(self, other))
         r = Register()
@@ -285,6 +289,17 @@ class Matrix():
 
 
 # General methods
+def set_attr(value):
+    if type(value) == int:
+            value = "#{}".format(value)
+    
+    print("+ {}".format(value))
+    r = Register()
+    r.new_reg()
+    return r
+
+def get_attr(name):
+    return "get_attr {}".format(name)
 
 def wrap(obj, obj_type): # Currently only for Matrices
     if type(obj) == obj_type: 

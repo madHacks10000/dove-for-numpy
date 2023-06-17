@@ -24,6 +24,15 @@ class DecisionStump:
 
         return predictions
 
+    def __setattr__(self, name, value): # name is attribute name
+        print("SETATTR {} {}".format(name, value))
+        #np.set_attr(value)
+        value = np.set_attr(value)
+        object.__setattr__(self, name, value)
+    
+    def __getattr__(self, name): # name is attribute name
+        print("GETATTR {}".format(name))
+        np.get_attr(name)
 
 class Adaboost:
     def __init__(self, n_clf=5):
@@ -49,13 +58,13 @@ class Adaboost:
 
             # greedy search to find best threshold and feature
             #for feature_i in range(n_features):
-            def func2(obj, self, X, y, w, n_features, n_samples, min_error, *args):
+            def func2(obj, clf, self, X, y, w, n_features, n_samples, min_error, *args):
                 
                 X_column = X[:, feature_i]
                 thresholds = np.unique(X_column)
 
                 #for threshold in thresholds:
-                def func3(obj, y, w, n_samples, X_column, min_error, *args):
+                def func3(obj, clf, y, w, n_samples, X_column, min_error, *args):
                     
                     # predict with polarity 1
                     p = 1
@@ -79,11 +88,11 @@ class Adaboost:
 
                 threshold = 0
                 threshold = np.make_ptr(thresholds)
-                np.for_loop(0, thresholds, 1, func3, threshold, y, w, n_samples, X_column, min_error)
+                np.for_loop(0, thresholds, 1, func3, threshold, clf, y, w, n_samples, X_column, min_error)
             
             feature_i = 0 
             feature_i = np.for_index(feature_i)
-            np.for_loop(0, n_features, 1, func2, feature_i, self, X, y, w, n_features, n_samples, min_error)
+            np.for_loop(0, n_features, 1, func2, feature_i, self, clf, X, y, w, n_features, n_samples, min_error)
 
             # calculate alpha
             EPS = 1e-10
@@ -101,8 +110,7 @@ class Adaboost:
         
         loop_var = 0
         loop_var = np.for_index(loop_var)
-        
-        np.for_loop(0, self.n_clf, 1, func1, loop_var, self, X, y, w, n_features, n_samples, loop_var) # for _ in range(self.n_clf):
+        np.for_loop(0, self.n_clf, 1, func1, loop_var, self, X, y, w, n_features, n_samples, loop_var) # for _ in range(self.n_clf)
 
     def predict(self, X):
         #clf_preds = [clf.alpha * clf.predict(X) for clf in self.clfs] 
@@ -112,12 +120,10 @@ class Adaboost:
             #prediction = clf.alpha * clf.predict(X)  # Calculate the prediction for current clf
             #clf_preds.append(prediction)
         
-        
-        def func4(obj, clf_preds, X, *args):
+        def func4(obj, clf, clf_preds, X, *args):
             prediction = clf.alpha * clf.predict(X)
             clf_preds.append(prediction)
 
-        clf = 0
         clf_preds = []
         clf = np.make_ptr(self.clfs) #self.clfs is a list and clf is now a register
         np.for_loop(0, self.clfs, 1, func4, clf, clf_preds, X)
