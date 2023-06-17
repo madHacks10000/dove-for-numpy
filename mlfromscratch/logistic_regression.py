@@ -19,21 +19,25 @@ class LogisticRegression:
 
         # gradient descent
         #for _ in range(self.n_iters):
-        np.for_loop(0, self.n_iters, 1, None)
-        # approximate y with linear combination of weights and x, plus bias
-        #X type: numpy array
-        #self.weight: Matrix
-        #self.bias: float
-        linear_model = np.dot(X, self.weights) + self.bias #self.weights = None
-        # apply sigmoid function
-        y_predicted = self._sigmoid(linear_model) 
+        def func1(obj):
+            # approximate y with linear combination of weights and x, plus bias
+            #X type: numpy array
+            #self.weight: Matrix
+            #self.bias: float
+            linear_model = np.dot(X, self.weights) + self.bias #self.weights = None
+            # apply sigmoid function
+            y_predicted = self._sigmoid(linear_model) 
 
-        dw = (1 / n_samples) * np.dot(X.T, (y_predicted - y)) 
-        db = (1 / n_samples) * np.sum(y_predicted - y)
-    
-        self.weights -= self.lr * dw
-        self.bias -= self.lr * db
-        np.end_for(0)
+            dw = (1 / n_samples) * np.dot(X.T, (y_predicted - y)) 
+            db = (1 / n_samples) * np.sum(y_predicted - y)
+        
+            self.weights -= self.lr * dw
+            self.bias -= self.lr * db
+        
+        #for _ in range(self.n_iters):
+        iter_obj = 0 
+        iter_obj = np.for_index(iter_obj)
+        np.for_loop(0, self.n_iters, 1, func1, iter_obj)
 
     def predict(self, X):
         linear_model = np.dot(X, self.weights) + self.bias
@@ -43,10 +47,12 @@ class LogisticRegression:
         #y_predicted_cls = [1 if i > 0.5 else 0 for i in y_predicted] <-- original statement
         y_predicted_cls = []
         
-        def func(i):
+        def func2(obj):
             np.if_else(y_predicted[i] > 0.5, 1, 0)
 
-        np.for_loop(0, y_predicted, 1, func)
+        i = 0 
+        i = np.for_index(i)
+        np.for_loop(0, y_predicted, 1, func2, i)
 
         #for i in y_predicated:
         #    if i > 0.5:

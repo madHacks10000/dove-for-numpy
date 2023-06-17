@@ -9,7 +9,132 @@ reg_num = 1
 TRANSCRIPT = "transcript.txt"
 file = open(TRANSCRIPT, "w")
 
-class Register():
+class DoveNumpy():
+
+    def __rsub__(self, other): 
+        other = "#{}".format(other) if isinstance(other, (int, float)) else other
+        if type(self) == Matrix:
+            return Matrix.modify_matrix(self, other, '-')
+        else:
+            print("- {} {}".format(other, self))
+            r = Register()
+            r.new_reg()
+            return r
+    
+    def __sub__(self, other): 
+        other = "#{}".format(other) if isinstance(other, (int, float)) else other
+        if type(self) == Matrix:
+            return Matrix.modify_matrix(self, other, '-')
+        else:
+            print("- {} {}".format(self, other))
+            r = Register()
+            r.new_reg()
+            return r
+
+    def __radd__(self, other):
+        other = "#{}".format(other) if isinstance(other, (int, float)) else other
+        if type(self) == Matrix:
+            return Matrix.modify_matrix(self, other, '+')
+        else:
+            print("+ {} {}".format(other, self))
+            r = Register()
+            r.new_reg()
+            return r
+
+    def __add__(self, other):
+        other = "#{}".format(other) if isinstance(other, (int, float)) else other
+        if type(self) == Matrix:
+            return Matrix.modify_matrix(self, other, '+')
+        else:
+            print("+ {} {}".format(self, other))
+            r = Register()
+            r.new_reg()
+            return r
+    
+    def __truediv__(self, other):
+        other = "#{}".format(other) if isinstance(other, (int, float)) else other
+        if type(self) == Matrix:
+            return Matrix.modify_matrix(self, other, '/')
+        else:
+            print("/ {} {}".format(self, other))
+            r = Register()
+            r.new_reg()
+            return r
+    
+    def __rtruediv__(self, other):
+        other = "#{}".format(other) if isinstance(other, (int, float)) else other
+        if type(self) == Matrix:
+            return Matrix.modify_matrix(self, other, '/')
+        else:
+            print("/ {} {}".format(other, self))
+            r = Register()
+            r.new_reg()
+            return r
+    
+    def __rfloordiv__(self, other):
+        other = "#{}".format(other) if isinstance(other, (int, float)) else other
+        if type(self) == Matrix:
+            return Matrix.modify_matrix(self, other, '/')
+        else:
+            print("/ {} {}".format(other, self))
+            r = Register()
+            r.new_reg()
+            return r
+    
+    def __mul__(self, other):
+        other = "#{}".format(other) if isinstance(other, (int, float)) else other
+        if type(self) == Matrix:
+            return Matrix.modify_matrix(self, other, '*')
+        else:
+            print("* {} {}".format(self, other))
+            r = Register()
+            r.new_reg()
+            return r
+
+    def __rmul__(self, other):
+        other = "#{}".format(other) if isinstance(other, (int, float)) else other
+        if type(self) == Matrix:
+            return Matrix.modify_matrix(self, other, '*')
+        else:
+            print("* {} {}".format(other, self))
+            r = Register()
+            r.new_reg()
+            return r
+    
+    def __gt__(self, other): 
+        other = "#{}".format(other) if isinstance(other, (int, float)) else other
+        if type(self) == Matrix:
+            return Matrix.modify_matrix(self, other, '>')
+        else:
+            print("> {} {}".format(self, other))
+            r = Register()
+            r.new_reg()
+            return r
+
+    def __lt__(self, other): 
+        other = "#{}".format(other) if isinstance(other, (int, float)) else other
+        if type(self) == Matrix:
+            return Matrix.modify_matrix(self, other, '<')
+        else:
+            print("< {} {}".format(self, other))
+            r = Register()
+            r.new_reg()
+            return r
+    
+    def __neg__(self):
+        return self * -1
+
+    def __ne__(self, other):
+        other = "#{}".format(other) if isinstance(other, (int, float)) else other
+        if type(self) == Matrix:
+            return Matrix.modify_matrix(self, other, '!=')
+        else:
+            print("!= {} {}".format(self, other))
+            r = Register()
+            r.new_reg()
+            return r
+
+class Register(DoveNumpy):
     def __init__(self):
         global reg_num
         self.iD = reg_num
@@ -21,91 +146,7 @@ class Register():
     def __str__(self):  
         return "%{}".format(self.iD)
 
-    #def __getattr__(self, name, value):
-        #print("get_attrrrrrrrrrrrrr {}".format(name))
-        #return "get_attrrrrrrrrrrrrr {}".format(name)
-
-    def __gt__(self, other): 
-        print("> {} {}".format(self, other))
-        r = Register()
-        r.new_reg()
-        return r
-
-    def __lt__(self, other): 
-        print("< {} {}".format(self, other))
-        r = Register()
-        r.new_reg()
-        return r
-    
-    def __rsub__(self, other): 
-        if type(other) == int:
-            other = "#{}".format(other)
-        print("- {} {}".format(str(other), str(self)))
-        r = Register()
-        r.new_reg()
-        return r
-    
-    def __sub__(self, other): 
-        if type(self) == int:
-            other = "#{}".format(other)
-        print("- {} {}".format(str(self), str(other)))
-        r = Register()
-        r.new_reg()
-        return r
-
-    def __radd__(self, other):
-        if type(other) == int or type(other) == float: #TODO: how to avoid repetition
-            other = "#{}".format(other)
-        print("+ {} {}".format(str(other), str(self)))
-        r = Register()
-        r.new_reg()
-        return r
-
-    def __add__(self, other):
-        if type(other) == int:
-            other = "#{}".format(other)
-        print("+ {} {}".format(str(self), str(other)))
-        r = Register()
-        r.new_reg()
-        return r
-    
-    def __truediv__(self, other):
-        if type(other) == int:
-            other = "#{}".format(other)
-        print("/ {} {}".format(str(self), str(other)))
-        r = Register()
-        r.new_reg()
-        return r
-    
-    def __rtruediv__(self, other):
-        if type(other) == int:
-            other = "#{}".format(other)
-        print("/ {} {}".format(str(other), str(self)))
-        r = Register()
-        r.new_reg()
-        return r
-    
-    def __mul__(self, other):
-        if type(other) == int:
-            other = "#{}".format(other)
-        print("* {} {}".format(str(self), str(other)))
-        r = Register()
-        r.new_reg()
-        return r
-
-    def __rmul__(self, other):
-        if type(other) == int:
-            other = "#{}".format(other)
-        print("* {} {}".format(str(other), str(self)))
-        r = Register()
-        r.new_reg()
-        return r
-    
-    def __neg__(self):
-        return self * -1
-
-
-class Pointer():
+class Pointer(DoveNumpy):
     def __init__(self, name, row, col): #TODO: modify structure of init and new_ptr
         self.name = name
         self.row = row
@@ -119,12 +160,8 @@ class Pointer():
 
     def __str__(self):
         return "${}@({},{})".format(self.name, self.row, str(self.col))
-    
-    def __gt__(self, other): 
-        print("> {} {}".format(self, other))
-        return Register()
 
-class ForIndex():
+class ForIndex(DoveNumpy):
     def __init__(self):
         global loop_indx
         self.iD = loop_indx
@@ -135,10 +172,6 @@ class ForIndex():
     
     def __str__(self):
         return "\{}".format(self.iD)
-
-    def __gt__(self, other): 
-        print("> {} {}".format(self, other))
-        return Register()
 
 def parse(obj, slice_obj):
     result = ''
@@ -158,7 +191,7 @@ def parse(obj, slice_obj):
     return result    
     
 
-class Matrix():
+class Matrix(DoveNumpy):
     def __init__(self, row, col, name = None, operation = None, slice_obj = None):
         global matrix_num
         self.iD = matrix_num 
@@ -200,51 +233,6 @@ class Matrix():
 
     def __str__(self):
         return "${}".format(self.iD)
-    
-    def __gt__(self, other): 
-        print("> {} {}".format(self, other))
-        return Matrix.modify_matrix(self, other, '>')
-    
-    def __add__(self, other): 
-        return Matrix.modify_matrix(self, other, '+')
-
-    def __sub__(self, other): 
-        if type(self) == type(None):
-            self = 0
-        elif type(other) == type(None):
-            other = 0
-        return Matrix.modify_matrix(self, other, '-')
-
-    def __rsub__(self, other):
-        if type(self) == type(None):
-            self = 0
-        elif type(other) == type(None):
-            other = 0 
-        return Matrix.modify_matrix(self, other, '-')
-
-    def __radd__(self, other):
-        return Matrix.modify_matrix(self, other, '+')
-
-    def __mul__(self, other): 
-        return Matrix.modify_matrix(self, other, '*')
-
-    def __rmul__(self, other): 
-        return Matrix.modify_matrix(self, other, '*')
-
-    def __truediv__(self, other): 
-        return Matrix.modify_matrix(self, other, '/')
-
-    def __rtruediv__(self, other): 
-        return Matrix.modify_matrix(self, other, '/')
-
-    def __rfloordiv__(self, other):
-        return Matrix.modify_matrix(self, other, '/')
-
-    def __neg__(self):
-        return Matrix.modify_matrix(self, -1, '*')
-
-    def __ne__(self, other):
-        return Matrix.modify_matrix(self, other, '!=')
 
     def __getitem__(self, pos):
         if type(pos) == int:
