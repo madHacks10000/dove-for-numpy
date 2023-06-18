@@ -2,6 +2,7 @@
 from xmlrpc.client import boolean
 import numpy as np
 from numpy import random
+from numpy import linalg
 
 matrix_num = 1 #total number of operations
 loop_indx = 1 #renam
@@ -137,14 +138,14 @@ class DoveNumpy():
 class Register(DoveNumpy):
     def __init__(self):
         global reg_num
-        self.iD = reg_num
+        self.iden = reg_num
         reg_num += 1
     
     def new_reg(self):
-        print("set %{}".format(self.iD)) 
+        print("set %{}".format(self.iden)) 
 
     def __str__(self):  
-        return "%{}".format(self.iD)
+        return "%{}".format(self.iden)
 
 class Pointer(DoveNumpy):
     def __init__(self, name, row, col): #TODO: modify structure of init and new_ptr
@@ -164,14 +165,14 @@ class Pointer(DoveNumpy):
 class ForIndex(DoveNumpy):
     def __init__(self):
         global loop_indx
-        self.iD = loop_indx
+        self.iden = loop_indx
         loop_indx += 1
 
     def new_index(self):
         return ForIndex()
     
     def __str__(self):
-        return "\{}".format(self.iD)
+        return "\{}".format(self.iden)
 
 def parse(obj, slice_obj):
     result = ''
@@ -194,11 +195,11 @@ def parse(obj, slice_obj):
 class Matrix(DoveNumpy):
     def __init__(self, row, col, name = None, operation = None, slice_obj = None):
         global matrix_num
-        self.iD = matrix_num 
+        self.iden = matrix_num 
 
         # Case of slicing
         if type(row) in (slice, tuple) or type(col) in (slice, tuple):
-            print("slice const ${} {}${}".format(slice_obj.iD, parse((row, col), slice_obj), self.iD))
+            print("slice const ${} {}${}".format(slice_obj.iden, parse((row, col), slice_obj), self.iden))
             if type(row) in (slice, tuple):
                 self.row = slice_obj.row
                 self.col = col
@@ -216,35 +217,34 @@ class Matrix(DoveNumpy):
         # If matrix isn't a slice
         if slice_obj == None:
             if self.name == None: 
-                print("def ${} [1:{}] [1:{}]\n\t{} ".format(self.iD, self.row, self.col, self.operation), end = ' ')
+                print("def ${} [1:{}] [1:{}]\n\t{} ".format(self.iden, self.row, self.col, self.operation), end = ' ')
             else: # External dataset
-                print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iD, self.row, self.col, self.name, self.iD))
+                print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iden, self.row, self.col, self.name, self.iden))
 
     def modify_matrix(self, operand, operation):
         global matrix_num
         if type(operand) == type(None): 
             tmp = self
         else:
-            if type(operand) == int or type(operand) == float:
-                operand = "#{}".format(operand)
+            operand = "#{}".format(operand) if isinstance(operand, (int, float)) else operand
             tmp = Matrix(self.row, self.col, None, operation)
-            print("${} {}\nend ${}".format(self.iD, str(operand), tmp.iD)) 
+            print("${} {}\nend ${}".format(self.iden, str(operand), tmp.iden)) 
         return tmp
 
     def __str__(self):
-        return "${}".format(self.iD)
+        return "${}".format(self.iden)
 
     def __getitem__(self, pos):
         if type(pos) == int:
-            p = Pointer(self.iD, 1, pos).new_ptr() #TODO: change later, temp fix
+            p = Pointer(self.iden, 1, pos).new_ptr() #TODO: change later, temp fix
         elif type(pos) == ForIndex:
-            p = Pointer(self.iD, 1, ForIndex()).new_ptr()
+            p = Pointer(self.iden, 1, ForIndex()).new_ptr()
         elif type(pos) == tuple or type(pos) == slice: # A slice is a Matrix
             p = Matrix(pos[0], pos[1], None, None, self)
         elif type(pos) == Matrix:
             p = Matrix.modify_matrix(self, pos, "==")
         else:  
-            p = Pointer(self.iD, pos[0], pos[1]).new_ptr()
+            p = Pointer(self.iden, pos[0], pos[1]).new_ptr()
         return p
 
     def __setitem__(self, idx, value):
@@ -254,16 +254,16 @@ class Matrix(DoveNumpy):
             print("setitem tuple")
             if type(value) == int:
                 value = "#" + str(value)
-            print("update ${} [{}] [{}] {}".format(self.iD, str(idx[0]), str(idx[1]), str(value)))
+            print("update ${} [{}] [{}] {}".format(self.iden, str(idx[0]), str(idx[1]), str(value)))
         elif type(idx) == bool:
             print("setitem bool")
             m = Matrix.modify_matrix(self, value, "==") #TODO: FIX
             if type(value) == int:
                 value = "#" + str(value)
-            print("update ${} {} {}".format(self.iD, str(m), value))
+            print("update ${} {} {}".format(self.iden, str(m), value))
         elif type(idx) == Register: #TODO: FIX 
             m = Matrix.modify_matrix(self, idx, "==")
-            print("update ${} {} {}".format(self.iD, str(m), value))
+            print("update ${} {} {}".format(self.iden, str(m), value))
         
     def append(self, element):
         print("4")
@@ -274,9 +274,8 @@ class Matrix(DoveNumpy):
         self.col = self.col + 1
         print("update {} {}".format(str(self), str(element)))
         
-
-
 # General methods
+
 def set_attr(value):
     if type(value) == int:
             value = "#{}".format(value)
@@ -289,24 +288,12 @@ def set_attr(value):
 def get_attr(name):
     return "get_attr {}".format(name)
 
-def wrap(obj, obj_type): # Currently only for Matrices
-    if type(obj) == obj_type: 
-        return obj
-    elif type(obj) == type(None):
-        return obj
-    elif obj_type == Matrix: 
-        if len(np.shape(obj)) == 2: # 2D array
-            m = Matrix(np.shape(obj)[0], np.shape(obj)[1], "sample", None)
-        else: # 1D
-            m = Matrix(1, np.shape(obj)[0], "sample", None)
-        return m
-
 def for_loop(start, end, step, func, obj, *args): # Obj is string or function
     global matrix_num
     global loop_indx
     matrix_num += 1
     if type(obj) == ForIndex:
-        index_var = " \{}".format(obj.iD)
+        index_var = " \{}".format(obj.iden)
     elif type(obj) == Register or type(obj) == type(None):
         index_var = ""
 
@@ -328,9 +315,9 @@ def for_index(var):
 def make_ptr(matrix): #TODO: see if I even need this
     matrix = wrap(matrix, Matrix)
     if len(np.shape(matrix)) == 2:
-        var = Pointer(matrix.iD, ForIndex(), ForIndex())
+        var = Pointer(matrix.iden, ForIndex(), ForIndex())
     else:
-        var = Pointer(matrix.iD, 1, ForIndex())
+        var = Pointer(matrix.iden, 1, ForIndex())
     v = var.new_ptr()
     return v
 
@@ -344,7 +331,7 @@ def if_else(cond, path_one, path_two):
         path_one = "#{}".format(path_one)
     if type(path_two) == int:
         path_two = "#{}".format(path_two)
-    print("ifelse %{} {} {}".format(cond.iD, str(path_one), str(path_two)))
+    print("ifelse %{} {} {}".format(cond.iden, str(path_one), str(path_two)))
     result = path_two
     if type(path_two) == Matrix:
         return result
@@ -360,7 +347,8 @@ def zeros(shape): # Shape is int or tuple of ints
         m = Matrix(1, shape, None, "+") 
     else: # 2D
         m = Matrix(shape[0], shape[1], None, "+") 
-    print("#0\nend ${}".format(m.iD)) # file.write
+    m.modify_matrix()
+    print("#0\nend ${}".format(m.iden)) # file.write
     return m
 
 def dot(item1, item2): 
@@ -391,7 +379,7 @@ def sum(arr, axis = None): # Elements to sum, takes in array
         axis_str = ""
     
     m = wrap(arr, Matrix)
-    print("sum {}${}".format(axis_str, m.iD)) # Backend modification
+    print("sum {}${}".format(axis_str, m.iden)) # Backend modification
     r = Register()
     r.new_reg()
     return r
@@ -424,16 +412,16 @@ def ones(shape): # Shape is int or tuple of ints
         m = Matrix(1, shape, None, "+") 
     else: # 2D
         m = Matrix(shape[0], shape[1], None, "+") 
-    print("#1\nend ${}".format(m.iD)) 
+    print("#1\nend ${}".format(m.iden)) 
     return m
 
 def full(shape, fill_value): # Will need to modify DOVE backend
     if isinstance(shape, int): #1D array
         m = Matrix(1, shape, None, "+")
-        print("#{}\nend ${}".format(fill_value, m.iD))
+        print("#{}\nend ${}".format(fill_value, m.iden))
     else: #2D
         m = Matrix(shape[0], shape[1], None, "+")
-        print("#{}\nend ${}".format(fill_value, m.iD))
+        print("#{}\nend ${}".format(fill_value, m.iden))
     return m
         
 def unique(array): # Requires backend modifications
@@ -448,8 +436,8 @@ def unique(array): # Requires backend modifications
             size = m.row * m.col
     else:
         size = 0
-    n = Matrix(1, size, None, "==") # Flatten to 1D, worst case length
-    print("unique ${}\nend ${}".format(m.iD, n.iD))
+    n = Matrix(1, size, None, "unique") # Flatten to 1D, worst case length
+    print("${}\nend ${}".format(m.iden, n.iden))
     return n
 
 def log(obj): # Natural log, element-wise
@@ -465,14 +453,14 @@ def log(obj): # Natural log, element-wise
         else:
             row = 0
             col = 0
-        n = Matrix(row, col, None, "+") 
-        print("log ${}\nend ${}".format(m.iD, n.iD))
+        n = Matrix(row, col, None, "log") 
+        print("${}\nend ${}".format(m.iden, n.iden))
     return n
 
 def sign(array):
     if type(array) == Matrix:
-        n = Matrix(array.row, array.col, None, "+")
-        print("sign ${}\nend ${}".format(m.iD, n.iD))
+        n = Matrix(array.row, array.col, None, None)
+        print("sign ${}\nend ${}".format(m.iden, n.iden))
         return n
     elif type(array) == Register:
         print("sign {}".format(str(array)))
@@ -485,7 +473,7 @@ def sign(array):
 # Decision Tree
 
 def max(array): # Find max value of array
-    print("max ${}".format(array.iD))
+    print("max ${}".format(array.iden))
     r = Register()
     r.new_reg()
     return r
@@ -493,8 +481,8 @@ def max(array): # Find max value of array
 def bincount(array): # Count number of occurrences of each value in array of non-negative ints
     # Inefficient to use 'unique' syntax, need another backend modification
     max_int = max(array)
-    m = Matrix(1, max_int, None, "+")
-    print("bincount {}\nend ${}".format(array.iD, m.iD)) #TODO: find better name than 'bincount'
+    m = Matrix(1, max_int, None, "bincount")
+    print("{}\nend ${}".format(array.iden, m.iden)) #TODO: find better name than 'bincount'
 
 def log2(obj):
     if type(obj) == int or type(obj) == float or type(obj) == Register:
@@ -509,23 +497,23 @@ def log2(obj):
         else:
             row = 0
             col = 0
-        n = Matrix(row, col, None, "+") 
-        print("log2 ${}\nend ${}".format(m.iD, n.iD)) #TODO: figure out better syntax
+        n = Matrix(row, col, None, "log2") 
+        print("${}\nend ${}".format(m.iden, n.iden)) #TODO: figure out better syntax
     return n
 
 def choice(obj, size=None, replace=True): # From numpy.random
     # Generates a random sample from a given 1-D array
-    m = Matrix(1, obj, None, "+")
+    m = Matrix(1, obj, None, "rand")
     if type(obj) == int: #TODO: figure out format for printing params, need more than obj
         params = "#{}".format(obj)
     else:
-        params = "${}".format(obj.iD)
-    print("rand {}\nend ${}".format(params, m.iD))
+        params = "${}".format(obj.iden)
+    print("{}\nend ${}".format(params, m.iden))
 
 def argwhere(cond): # Find the indices of array elements that are non-zero, grouped by element.
     # Input is like x > 1 where x is an array
-    m = Matrix(1, 10, None, "+") # TODO: properly set size, 1 and 10 are placeholders
-    print("argwhere ${}\nend ${}".format(cond.iD, m.iD))
+    m = Matrix(1, 10, None, "argwhere") # TODO: properly set size, 1 and 10 are placeholders
+    print("${}\nend ${}".format(cond.iden, m.iden))
     return m
 
 # Kmeans
@@ -538,8 +526,8 @@ def seed(int): # From np.random
     
 def sqrt(obj):
     if type(obj) == Matrix:
-        m = Matrix.modify_matrix(obj, None, "+")
-        print("sqrt ${}\nend ${}".format(obj.iD, m.iD))
+        m = Matrix.modify_matrix(obj, None, "sqrt")
+        print("${}\nend ${}".format(obj.iden, m.iden))
         return m
     else:
         if type(obj) == int:
@@ -554,7 +542,7 @@ def empty(shape):
         m = Matrix(1, shape, None, "empty")
     else:
         m = Matrix(shape[0], shape[1], None, "empty")
-    print("\nend ${}".format(m.iD))
+    print("\nend ${}".format(m.iden))
     return m
 
 def argmin(array): # Returns indices of the min values along an axis
@@ -565,8 +553,8 @@ def argmin(array): # Returns indices of the min values along an axis
 
 def mean(array, axis = None):
     if axis != None:
-        m = Matrix(10, 10, None, "+")
-        print("mean ${}\nend ${}".format(array.iD, m.iD))
+        m = Matrix(10, 10, None, "mean")
+        print("${}\nend ${}".format(array.iden, m.iden))
         return m
     else:
         print("mean {}".format(array))
@@ -574,7 +562,26 @@ def mean(array, axis = None):
         r.new_reg()
         return r
 
+# Knn
 
+def argsort(array):
+    # Default: axis = 1, sort = quicksort
+    m = Matrix.modify_matrix(array, None, "argsort")
+    print("${}\nend ${}".format(array.iden, m.iden))
+    return m
+
+# Ida- both from linalg module
+
+def inv(array): # Calculate inverse of a Matrix
+    m = Matrix.modify_matrix(array, None, "inv")
+    print("${}\nend ${}".format(array.iden, m.iden))
+    return m
+
+def eig(array): # Calculate eigenvalues and eigenvectors
+    print("eig ${}".format(array.iden))
+    r = Register()
+    r.new_reg()
+    return r
 
 
 
