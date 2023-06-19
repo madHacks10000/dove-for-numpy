@@ -221,14 +221,23 @@ class Matrix(DoveNumpy):
             else: # External dataset
                 print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iden, self.row, self.col, self.name, self.iden))
 
-    def modify_matrix(self, operand, operation):
+    def modify_matrix(obj, operand, operation):
         global matrix_num
         if type(operand) == type(None): 
-            tmp = self
+            tmp = obj
         else:
+            if type(obj) == tuple:
+                row = obj[0]
+                col = obj[1]
+                param = ""
+            else:
+                row = obj.row
+                col = obj.col
+                param = "{} ".format(obj.iden)
             operand = "#{}".format(operand) if isinstance(operand, (int, float)) else operand
-            tmp = Matrix(self.row, self.col, None, operation)
-            print("${} {}\nend ${}".format(self.iden, str(operand), tmp.iden)) 
+            tmp = Matrix(row, col, None, operation)
+            print("{}{}\nend ${}".format(param, str(operand), tmp.iden)) #first param was obj.iden
+            
         return tmp
 
     def __str__(self):
@@ -266,7 +275,7 @@ class Matrix(DoveNumpy):
             print("update ${} {} {}".format(self.iden, str(m), value))
         
     def append(self, element):
-        print("4")
+
         if type(element) == int or type(element) == float:
             element = "#{}".format(element)
         elif type(element) != Register: # Custom objects
@@ -313,7 +322,6 @@ def for_index(var):
     return v
 
 def make_ptr(matrix): #TODO: see if I even need this
-    matrix = wrap(matrix, Matrix)
     if len(np.shape(matrix)) == 2:
         var = Pointer(matrix.iden, ForIndex(), ForIndex())
     else:
@@ -343,12 +351,8 @@ def if_else(cond, path_one, path_two):
 # Logistic regression
 
 def zeros(shape): # Shape is int or tuple of ints
-    if isinstance(shape, int): # 1D array
-        m = Matrix(1, shape, None, "+") 
-    else: # 2D
-        m = Matrix(shape[0], shape[1], None, "+") 
-    m.modify_matrix()
-    print("#0\nend ${}".format(m.iden)) # file.write
+    dims = (1, shape) if isinstance(shape, int) else (shape[0], shape[1])
+    m = Matrix.modify_matrix(dims, "0", "+")
     return m
 
 def dot(item1, item2): 
@@ -372,22 +376,15 @@ def dot(item1, item2):
 
 def sum(arr, axis = None): # Elements to sum, takes in array
     global matrix_num
-
-    if axis != None:
-        axis_str = "_{} ".format(axis)
-    else:
-        axis_str = ""
-    
-    m = wrap(arr, Matrix)
-    print("sum {}${}".format(axis_str, m.iden)) # Backend modification
+    axis_str = "_{} ".format(axis) if axis != None else ""
+    print("sum {}${}".format(axis_str, arr.iden)) # Backend modification
     r = Register()
     r.new_reg()
     return r
     
 def exp(obj): # Input is a Matrix
     if type(obj) == Register or type(obj) == int or type(obj) == float:
-        if type(obj) != Register:
-            obj = "#{}".format(obj)
+        obj = "#{}".format(obj) if type(obj) != Register else obj
         print("exp {}".format(str(obj)))
         r = Register()
         r.new_reg()
@@ -408,37 +405,27 @@ def array(data): # TODO: fix
 # Adaboost
 
 def ones(shape): # Shape is int or tuple of ints
-    if isinstance(shape, int): # 1D array
-        m = Matrix(1, shape, None, "+") 
-    else: # 2D
-        m = Matrix(shape[0], shape[1], None, "+") 
-    print("#1\nend ${}".format(m.iden)) 
+    dims = (1, shape) if isinstance(shape, int) else (shape[0], shape[1])
+    m = Matrix.modify_matrix(dims, "1", "+")
     return m
 
 def full(shape, fill_value): # Will need to modify DOVE backend
-    if isinstance(shape, int): #1D array
-        m = Matrix(1, shape, None, "+")
-        print("#{}\nend ${}".format(fill_value, m.iden))
-    else: #2D
-        m = Matrix(shape[0], shape[1], None, "+")
-        print("#{}\nend ${}".format(fill_value, m.iden))
+    dims = (1, shape) if isinstance(shape, int) else (shape[0], shape[1])
+    m = Matrix.modify_matrix(dims, fill_value, "+")
     return m
         
 def unique(array): # Requires backend modifications
     # Returns Matrix of sorted unique values
-    m = wrap(array, Matrix)
-    if type(m) != type(None):
-        if type(m.row) == ForIndex: 
-            size = m.col
-        elif type(m.col) == ForIndex:
-            size = m.row
-        else:
-            size = m.row * m.col
-    else:
+    if type(array) == type(None):
         size = 0
-    n = Matrix(1, size, None, "unique") # Flatten to 1D, worst case length
-    print("${}\nend ${}".format(m.iden, n.iden))
-    return n
+    elif type(array.row) == ForIndex: #TODO: figure out how to deal with ForIndex dimensions
+        size = (1, array.col)
+    elif type(array.col) == ForIndex:
+        size = (1, array.row)
+    else:
+        size = (1, array.row * array.col)
+    m = Matrix.modify_matrix(size, array.iden, "unique")
+    return m
 
 def log(obj): # Natural log, element-wise
     if type(obj) == int or type(obj) == float or type(obj) == Register:
@@ -446,21 +433,17 @@ def log(obj): # Natural log, element-wise
         n = Register()
         n.new_reg()
     else:
-        m = wrap(obj, Matrix)
-        if m != type(None):
-            row = m.row
-            col = m.col
+        if obj != type(None):
+            dims = (obj.row, obj.col)
         else:
-            row = 0
-            col = 0
-        n = Matrix(row, col, None, "log") 
-        print("${}\nend ${}".format(m.iden, n.iden))
+            dims = (0, 0)
+        n = Matrix.modify_matrix(dims, obj.iden, "log")
     return n
 
 def sign(array):
     if type(array) == Matrix:
-        n = Matrix(array.row, array.col, None, None)
-        print("sign ${}\nend ${}".format(m.iden, n.iden))
+        dims = (array.row, array.col)
+        n = Matrix.modify_matrix(dims, array.iden, "sign")
         return n
     elif type(array) == Register:
         print("sign {}".format(str(array)))
@@ -481,8 +464,8 @@ def max(array): # Find max value of array
 def bincount(array): # Count number of occurrences of each value in array of non-negative ints
     # Inefficient to use 'unique' syntax, need another backend modification
     max_int = max(array)
-    m = Matrix(1, max_int, None, "bincount")
-    print("{}\nend ${}".format(array.iden, m.iden)) #TODO: find better name than 'bincount'
+    m = Matrix.modify_matrix((1, max_int), array.iden, "bincount") #TODO: find better name than 'bincount'
+    return m
 
 def log2(obj):
     if type(obj) == int or type(obj) == float or type(obj) == Register:
@@ -490,36 +473,33 @@ def log2(obj):
         n = Register()
         n.new_reg()
     else:
-        m = wrap(obj, Matrix)
-        if m != type(None):
-            row = m.row
-            col = m.col
+        if obj != type(None):
+            dims = (obj.row, obj.col)
         else:
-            row = 0
-            col = 0
-        n = Matrix(row, col, None, "log2") 
-        print("${}\nend ${}".format(m.iden, n.iden)) #TODO: figure out better syntax
+            dims = (0, 0)
+        n = Matrix.modify_matrix(dims, obj, "log2")
     return n
 
-def choice(obj, size=None, replace=True): # From numpy.random
+def choice(obj, size = None, replace = True): # From numpy.random
     # Generates a random sample from a given 1-D array
-    m = Matrix(1, obj, None, "rand")
-    if type(obj) == int: #TODO: figure out format for printing params, need more than obj
-        params = "#{}".format(obj)
-    else:
-        params = "${}".format(obj.iden)
-    print("{}\nend ${}".format(params, m.iden))
+    if size == None:
+        size = (1, 1)
+    elif type(size) == int:
+        size = (1, size)
+    
+    obj = "#{}".format(obj) if type(obj) == int else obj #TODO: figure out format for printing params, need more than obj
+    m = Matrix(size, obj, "rand")
+    return m
 
 def argwhere(cond): # Find the indices of array elements that are non-zero, grouped by element.
-    # Input is like x > 1 where x is an array
-    m = Matrix(1, 10, None, "argwhere") # TODO: properly set size, 1 and 10 are placeholders
-    print("${}\nend ${}".format(cond.iden, m.iden))
+    # Example input: x > 1 where x is an array
+    m = Matrix.modify_matrix((1, 10), cond, "argwhere") #TODO: properly set size, 1 and 10 are placeholders
     return m
 
 # Kmeans
 
 def seed(int): # From np.random
-    print("seed #{}") # TODO: change later because the seed should probably be protected...
+    print("seed") # TODO: figure out what to do here since the seed should remain secret...
     r = Register()
     r.new_reg()
     return r
@@ -527,22 +507,17 @@ def seed(int): # From np.random
 def sqrt(obj):
     if type(obj) == Matrix:
         m = Matrix.modify_matrix(obj, None, "sqrt")
-        print("${}\nend ${}".format(obj.iden, m.iden))
         return m
     else:
-        if type(obj) == int:
-            obj = "#{}".format(obj)
+        obj = "#{}".format(obj) if isinstance(obj, (int, float)) else obj
         print("sqrt {}".format(obj))
         r = Register()
         r.new_reg()
         return r
 
 def empty(shape):
-    if type(shape) == int:
-        m = Matrix(1, shape, None, "empty")
-    else:
-        m = Matrix(shape[0], shape[1], None, "empty")
-    print("\nend ${}".format(m.iden))
+    shape = (1, shape) if type(shape) == int else shape
+    m = Matrix.modify_matrix(shape, None, "empty")
     return m
 
 def argmin(array): # Returns indices of the min values along an axis
@@ -553,8 +528,7 @@ def argmin(array): # Returns indices of the min values along an axis
 
 def mean(array, axis = None):
     if axis != None:
-        m = Matrix(10, 10, None, "mean")
-        print("${}\nend ${}".format(array.iden, m.iden))
+        m = Matrix.modify_Matrix(array, None, "mean") #TODO: figure out syntax to denote axis
         return m
     else:
         print("mean {}".format(array))
