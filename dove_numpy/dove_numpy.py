@@ -218,14 +218,20 @@ class Matrix(DoveNumpy):
         if slice_obj == None:
             if self.name == None: 
                 print("def ${} [1:{}] [1:{}]\n\t{} ".format(self.iden, self.row, self.col, self.operation), end = ' ')
+            elif operation == "empty": 
+                print("def ${} [1:{}] [1:{}]\n\empty\nend ${}".format(self.iden, self.row, self.col, self.iden))
             else: # External dataset
                 print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iden, self.row, self.col, self.name, self.iden))
 
     def modify_matrix(obj, operand, operation):
         global matrix_num
         if type(operand) == type(None): 
+            print("NONE")
             tmp = obj
         else:
+            if operation == "*" and type(operand) == Matrix:
+                row = obj.row
+                col = operand.col
             if type(obj) == tuple:
                 row = obj[0]
                 col = obj[1]
@@ -377,7 +383,7 @@ def dot(item1, item2):
 def sum(arr, axis = None): # Elements to sum, takes in array
     global matrix_num
     axis_str = "_{} ".format(axis) if axis != None else ""
-    print("sum {}${}".format(axis_str, arr.iden)) # Backend modification
+    print("sum {}${}".format(axis_str, arr.iden))
     r = Register()
     r.new_reg()
     return r
@@ -394,27 +400,31 @@ def exp(obj): # Input is a Matrix
 
     return tmp
 
-def array(data): # TODO: fix
-    if len(np.shape(data)) == 2: # 2D array 
-        m = Matrix(np.shape(data)[0], np.shape(data)[1], "sample", None) 
-    else: # 1D
-        m = Matrix(1, np.shape(data)[0], "sample", None)
-    return m
-    
+def array(data): 
+    if type(data) == Matrix:
+        return data
+    elif len(data) == 0:
+        return Matrix.modify_matrix((1, 1), None, "empty")
+    else:
+        print("Unable to define array. Please initialize in data.init file.")
 
 # Adaboost
 
-def ones(shape): # Shape is int or tuple of ints
+def ones(shape): #TODO: may need to remove
     dims = (1, shape) if isinstance(shape, int) else (shape[0], shape[1])
     m = Matrix.modify_matrix(dims, "1", "+")
     return m
 
-def full(shape, fill_value): # Will need to modify DOVE backend
-    dims = (1, shape) if isinstance(shape, int) else (shape[0], shape[1])
-    m = Matrix.modify_matrix(dims, fill_value, "+")
-    return m
+def full(shape, fill_value): 
+    if isinstance(fill_value, (int, float, str)):
+        print("full method: {} {}".format(shape, fill_value))
+        print("Unable to define array. Please initialize in data.init file.")
+    else:
+        dims = (1, shape) if isinstance(shape, int) else (shape[0], shape[1])
+        m = Matrix.modify_matrix(dims, fill_value, "+")
+        return m
         
-def unique(array): # Requires backend modifications
+def unique(array): 
     # Returns Matrix of sorted unique values
     if type(array) == type(None):
         size = 0
@@ -462,7 +472,6 @@ def max(array): # Find max value of array
     return r
 
 def bincount(array): # Count number of occurrences of each value in array of non-negative ints
-    # Inefficient to use 'unique' syntax, need another backend modification
     max_int = max(array)
     m = Matrix.modify_matrix((1, max_int), array.iden, "bincount") #TODO: find better name than 'bincount'
     return m
@@ -557,9 +566,26 @@ def eig(array): # Calculate eigenvalues and eigenvectors
     r.new_reg()
     return r
 
+# Linear Regression
 
+def corrcoef(x, y): # Return Pearson product-moment correlation coefficients
+    m = Matrix.modify_matrix(x, y, "corrcoef")
+    print("${} ${}\nend ${}".format(x.iden, y.iden, m.iden))
+    return m
 
+# Load data
 
+def float32(num): #TODO: figure out how to differentiate between data types
+    print("+ #{}".format(num))
+    r = Register()
+    r.new_reg()
+    return r
+
+    
+
+#genfromtxt, asarray
+
+# Pretty sure we can not support the loadtext or genfromtxt functions
     
     
     
