@@ -19,46 +19,42 @@ class LogisticRegression:
 
         # gradient descent
         #for _ in range(self.n_iters):
-        def func1(obj):
-            # approximate y with linear combination of weights and x, plus bias
-            #X type: numpy array
-            #self.weight: Matrix
-            #self.bias: float
-            linear_model = np.dot(X, self.weights) + self.bias #self.weights = None
-            # apply sigmoid function
-            y_predicted = self._sigmoid(linear_model) 
-
-            dw = (1 / n_samples) * np.dot(X.T, (y_predicted - y)) 
-            db = (1 / n_samples) * np.sum(y_predicted - y)
-        
-            self.weights -= self.lr * dw
-            self.bias -= self.lr * db
-        
-        #for _ in range(self.n_iters):
         iter_obj = 0 
         iter_obj = np.for_index(iter_obj)
-        np.for_loop(0, self.n_iters, 1, func1, iter_obj)
+        loop1 = np.for_loop(0, self.n_iters, 1, iter_obj)
 
+        # approximate y with linear combination of weights and x, plus bias
+        #X type: numpy array
+        #self.weight: Matrix
+        #self.bias: float
+        linear_model = np.dot(X, self.weights) + self.bias #self.weights = None
+        # apply sigmoid function
+        y_predicted = self._sigmoid(linear_model) 
+        # compute gradients
+        dw = (1 / n_samples) * np.dot(X.T, (y_predicted - y)) 
+        db = (1 / n_samples) * np.sum(y_predicted - y)
+        # update parameters
+        self.weights -= self.lr * dw
+        self.bias -= self.lr * db
+        np.end_for(loop1)
+        
     def predict(self, X):
         linear_model = np.dot(X, self.weights) + self.bias
         y_predicted = self._sigmoid(linear_model)
 
-        #replacing if-else with a function that emits the correct DOT syntax
         #y_predicted_cls = [1 if i > 0.5 else 0 for i in y_predicted] <-- original statement
-        y_predicted_cls = []
-        
-        def func2(obj):
-            np.if_else(y_predicted[i] > 0.5, 1, 0)
-
-        i = 0 
-        i = np.for_index(i)
-        np.for_loop(0, y_predicted, 1, func2, i)
-
         #for i in y_predicated:
         #    if i > 0.5:
         #        y_predicated_cls.append(1)
         #    else:
-        #        y_predicated_cl.append(0)
+        #        y_predicated_cls.append(0)
+        y_predicted_cls = []
+        i = 0 
+        i = np.for_index(i)
+        loop1 = np.for_loop(0, y_predicted, 1, i)
+        result = np.if_else(y_predicted[i] > 0.5, 1, 0)
+        y_predicted_cls.append(result)
+        np.end_for(loop1)
         return np.array(y_predicted_cls)
 
     def _sigmoid(self, x):
@@ -70,7 +66,7 @@ if __name__ == "__main__":
     # Imports
     from sklearn.model_selection import train_test_split
     from sklearn import datasets
-    import numpy as n
+    from dove_numpy.dove_numpy import Matrix 
 
     def accuracy(y_true, y_pred):
         accuracy = np.sum(y_true == y_pred) / len(y_true)
@@ -83,12 +79,12 @@ if __name__ == "__main__":
         X, y, test_size=0.2, random_state=1234
     )
 
-    X = np.array(X)
-    y = np.array(y)
-    X_train = np.array(X_train)
-    X_test = np.array(X_test)
-    y_train = np.array(y_train)
-    y_test = np.array(y_test)
+    X = Matrix(X.shape[0], X.shape[1], "X")
+    y = Matrix(1, y.shape[0], "y")
+    X_train = Matrix(X_train.shape[0], X_train.shape[1], "X_train")
+    X_test = Matrix(X_test.shape[0], X_test.shape[1], "X_test")
+    y_train = Matrix(1, y_train.shape[0], "y_train")
+    y_test = Matrix(1, y_test.shape[0], "y_test")
 
     regressor = LogisticRegression(learning_rate=0.0001, n_iters=1000)
     regressor.fit(X_train, y_train)

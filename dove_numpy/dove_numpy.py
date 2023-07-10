@@ -158,6 +158,18 @@ class DoveNumpy():
             r.new_reg()
             return r
 
+    def __eq__(self, other):
+        if type(self) == Matrix:
+            return Matrix.modify_matrix(self, other, '==')
+        else:
+            print("== {} {}".format(self, other))
+            r = Register()
+            r.new_reg()
+            return r
+
+    def __len__(self):
+        return self.row
+
     def __iadd__(self, other):
         other = "#{}".format(other) if isinstance(other, (int, float)) else other
         if type(self) == Matrix:
@@ -167,7 +179,6 @@ class DoveNumpy():
             r = Register()
             r.new_reg()
             return r
-
 
 class Register(DoveNumpy):
     def __init__(self):
@@ -232,20 +243,6 @@ class Matrix(DoveNumpy):
     def __init__(self, row, col, name = None, operation = None, slice_obj = None):
         global matrix_num
         self.iden = matrix_num
-        
-        @property
-        def T(self): #Transpose
-            m = Matrix(self.col, self.row, "empty", None)
-            i = 0 
-            i = for_index(i)
-            loop1 = for_loop(0, self.row, 1, i)
-            j = 0 
-            j = for_index(j)
-            loop2 = for_loop(0, self.col, 1, j)
-            m[j, i] = self[i, j]
-            end_for(loop2)
-            end_for(loop1)
-            return Matrix(self._data.T) 
 
         # Case of slicing
         if type(row) in (slice, tuple) or type(col) in (slice, tuple):
@@ -272,8 +269,22 @@ class Matrix(DoveNumpy):
                 print("def ${} [1:{}] [1:{}]\n\empty\nend ${}".format(self.iden, self.row, self.col, self.iden))
             else: # External dataset
                 print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iden, self.row, self.col, self.name, self.iden))
+    
+    @property
+    def T(self): #Transpose
+        m = Matrix(self.col, self.row, "empty", None)
+        i = 0 
+        i = for_index(i)
+        loop1 = for_loop(0, self.row, 1, i)
+        j = 0 
+        j = for_index(j)
+        loop2 = for_loop(0, self.col, 1, j)
+        m[j, i] = self[i, j]
+        end_for(loop2)
+        end_for(loop1)
+        return m
 
-    def modify_matrix(self, obj, operand, operation):
+    def modify_matrix(obj, operand, operation):
         global matrix_num
         bind = False
         if type(operand) == type(None): 
@@ -284,7 +295,7 @@ class Matrix(DoveNumpy):
                 col = operand.col
             elif operation == "cbind" or operation == "rbind":
                 bind = True
-                param, operand, row, col = self.bind(obj, operand, operation)
+                #param, operand, row, col = self.binding(obj, operand, operation)
 
             if type(obj) == tuple:
                 row = obj[0]
@@ -293,7 +304,7 @@ class Matrix(DoveNumpy):
             elif bind != True:
                 row = obj.row
                 col = obj.col
-                param = "{} ".format(obj.iden)
+                param = "{} ".format(obj)
             operand = "#{}".format(operand) if isinstance(operand, (int, float)) else operand
             tmp = Matrix(row, col, None, operation)
             print("{}{}\nend ${}".format(param, str(operand), tmp.iden)) #first param was obj.iden
@@ -331,7 +342,7 @@ class Matrix(DoveNumpy):
         elif type(idx) == Register: #TODO: FIX 
             m = Matrix.modify_matrix(self, idx, "==")
             print("update ${} {} {}".format(self.iden, str(m), value))
-        
+
     def append(self, element, invisible=False):
         if invisible == False:
             if type(element) == int or type(element) == float:
@@ -341,7 +352,7 @@ class Matrix(DoveNumpy):
             self.col = self.col + 1
             print("update {} {}".format(str(self), str(element)))
     
-    def bind(self, obj, operand, operation):
+    def binding(self, obj, operand, operation):
         if operation == "cbind":
             col = obj.col + operand.col
             row = obj.row
@@ -445,7 +456,7 @@ def if_else(cond, path_one, path_two):
 # Logistic regression
 def zeros(shape): # Shape is int or tuple of ints
     dims = (1, shape) if isinstance(shape, int) else (shape[0], shape[1])
-    m = Matrix.modify_matrix(dims, "0", "+")
+    m = Matrix.modify_matrix(dims, 0, "+")
     return m
 
 def dot(item1, item2): 
@@ -503,7 +514,7 @@ def exp(obj): # Input is a Matrix
         tmp = Matrix.modify_matrix(obj, None, "exp")
     return tmp
 
-def array(data, dtype): 
+def array(data, dtype = None): 
     if type(data) == Matrix:
         if dtype != None and type(data) != dtype:
             print("float32 {}".format(data))
@@ -511,8 +522,7 @@ def array(data, dtype):
             return data
     elif len(data) == 0:
         return Matrix.modify_matrix((1, 1), None, "empty")
-    else:
-        print("Unable to define array. Please initialize in data.init file.")
+    
 
 # Adaboost
 def ones(shape): #TODO: may need to remove
