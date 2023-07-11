@@ -205,13 +205,12 @@ class Pointer(DoveNumpy):
         return r
 
     def __str__(self):
-        return "${}@({},{})".format(self.name, self.row, str(self.col))
+        return "{}@({},{})".format(self.name, self.row, str(self.col))
 
 class ForIndex(DoveNumpy):
     def __init__(self):
         global loop_indx
         self.iden = loop_indx
-        loop_indx += 1
 
     def new_index(self):
         return ForIndex()
@@ -226,7 +225,7 @@ def parse(obj, slice_obj):
         if type(seq) == ForIndex: #any(isinstance(x, ForIndex) for x in seq): 
             result = "{}[{}] ".format(result, str(seq))
         elif type(seq) == int: #might be missing a condition
-            result = "{}#{} ".format(result, seq)
+            result = "{}[{}] ".format(result, seq)
         elif type(seq) == slice:
             if(seq.start == None):
                 if i == 1:
@@ -243,10 +242,11 @@ class Matrix(DoveNumpy):
     def __init__(self, row, col, name = None, operation = None, slice_obj = None):
         global matrix_num
         self.iden = matrix_num
-
+        sliced = False
         # Case of slicing
-        if type(row) in (slice, tuple) or type(col) in (slice, tuple):
+        if type(row) in (slice, tuple) or type(col) in (slice, tuple): # Maybe just check if slice_obj is None
             print("slice const ${} {}${}".format(slice_obj.iden, parse((row, col), slice_obj), self.iden))
+            sliced = True
             if type(row) in (slice, tuple):
                 self.row = slice_obj.row
                 self.col = col
@@ -260,9 +260,10 @@ class Matrix(DoveNumpy):
         self.operation = operation
         self.shape = (row, col)
         matrix_num += 1
+        self.slice_obj = slice_obj
 
         # If matrix isn't a slice
-        if slice_obj == None:
+        if sliced == False and slice_obj == None:
             if self.name == None: 
                 print("def ${} [1:{}] [1:{}]\n\t{} ".format(self.iden, self.row, self.col, self.operation), end = ' ')
             elif operation == "empty": 
@@ -288,14 +289,14 @@ class Matrix(DoveNumpy):
         global matrix_num
         bind = False
         if type(operand) == type(None): 
-            tmp = obj
+            operand = ""
         else:
             if operation == "*" and type(operand) == Matrix:
                 row = obj.row
                 col = operand.col
             elif operation == "cbind" or operation == "rbind":
                 bind = True
-                #param, operand, row, col = self.binding(obj, operand, operation)
+                param = ""
 
             if type(obj) == tuple:
                 row = obj[0]
@@ -307,7 +308,7 @@ class Matrix(DoveNumpy):
                 param = "{} ".format(obj)
             operand = "#{}".format(operand) if isinstance(operand, (int, float)) else operand
             tmp = Matrix(row, col, None, operation)
-            print("{}{}\nend ${}".format(param, str(operand), tmp.iden)) #first param was obj.iden
+            print("{}{}\nend ${}".format(param, operand, tmp.iden)) #first param was obj.iden
             
         return tmp
 
@@ -351,46 +352,6 @@ class Matrix(DoveNumpy):
                 element = type(element).__name__
             self.col = self.col + 1
             print("update {} {}".format(str(self), str(element)))
-    
-    def binding(self, obj, operand, operation):
-        if operation == "cbind":
-            col = obj.col + operand.col
-            row = obj.row
-        else:
-            row = obj.row + operand.row
-            col = obj.col
-        # Break up inputs before we can recombine
-        obj_str = ""
-        op_str = ""
-        if operation == "cbind":
-            if obj.col > 1:
-                for i in range(obj.col):
-                    ob = obj[:,i]
-                    obj_str = obj_str + " " + ob
-            else:
-                obj_str = obj
-            if operand.col > 1:
-                for i in range(operand.col):
-                    op = operand[:,i]  
-                    op_str = op_str + " " + op
-            else:
-                op_str = operand
-        if operation == "rbind":
-            if obj.row > 1:
-                for i in range(obj.row):
-                    ob = obj[i,:]
-                    obj_str = obj_str + " " + ob
-            else:
-                obj_str = obj_str + " " + obj
-            if operand.row > 1:
-                for i in range(operand.row):
-                    op = operand[i,:]
-                    op_str = op_str + " " + op
-            else:
-                op_str = operand
-        param = obj_str
-        operand = op_str
-        return param, operand, row, col
         
 # General methods
 def set_attr(value):
@@ -420,6 +381,7 @@ def for_loop(start, end, step, obj): # Obj is string or function
          new_end = end.col
 
     print("forloop [{}:{}:{}]{}".format(start, new_end, step, index_var)) 
+    loop_indx += 1
     return index_var
 
 def for_index(var):
@@ -534,17 +496,60 @@ def full(shape, fill_value):
     dims = (1, shape) if isinstance(shape, int) else (shape[0], shape[1])
     m = Matrix.modify_matrix(dims, fill_value, "+")
     return m
-        
+
+def binding(first, second, mode):
+    output_str = ""
+    if mode == "cbind":
+        if type(first) == Pointer:
+            output_str += str(first)
+        elif first.shape[1] > 1:
+            for i in range(first.col):
+                x = first[:,i]
+                output_str += "{} ".format(x)
+        else: # Col = 1
+            output_str = str(first)
+        if type(second) == Pointer:
+            output_str += str(first)
+        elif second.shape[1] > 1:
+            for i in range(second.col):
+                x = second[:,i]
+                output_str += "{} ".format(x)
+        else:
+            output_str = str(second)
+    if mode == "rbind":
+        if type(first) == Pointer:
+            output_str += str(second)
+        elif first.shape[0] > 1:
+            for i in range(first.row):
+                x = first[i,:]
+                output_str += "{} ".format(x)
+        else:
+            output_str = str(first)
+
+        if type(second) == Pointer:
+            output_str += str(first)
+        elif second.shape[0] > 1:
+            for i in range(second.row):
+                x = second[i,:]
+                output_str += " ${}".format(x)
+        else:
+            output_str = str(second)
+
+    return output_str
+
 def unique(array): # TODO: come back to
     # Returns Matrix of sorted unique values
-    if type(array.row) == ForIndex: #TODO: figure out how to deal with ForIndex dimensions
-        len = array.col
-    elif type(array.col) == ForIndex:
-        len = array.row
-    else:
-        len = array.row * array.col
+    #TODO: figure out how to deal with ForIndex dimensions
+    row = array.slice_obj.row if isinstance(array.shape[0], (tuple, slice)) else None
+    row = 1 if isinstance(array.shape[0], ForIndex) else row
+    row = array.shape[0] if row == None else row
+    col = array.slice_obj.col if isinstance(array.shape[1], (tuple, slice)) else None
+    col = 1 if isinstance(array.shape[1], ForIndex) else col
+    col = array.shape[1] if col == None else col
+
+    length = row * col
+    m = Matrix(1, length, "empty", None)
     # Unique array
-    m = Matrix(1, len, None, None)
     l = 0
     l = for_index(l)
     loop1 = for_loop(0, array, 1, l)
@@ -558,19 +563,22 @@ def unique(array): # TODO: come back to
     else:
         array.col = l
     p = Pointer(array, array.row, array.col)
-    n = Matrix.modify_matrix(m, p, "==")
-    print("any {}".format(n.iden))
+    n = Matrix.modify_matrix(m, p, "==") # See if the element is already in unique or not
+    print("any {}".format(n))
     r = Register()
     r.new_reg()
     print("! {}".format(r))
     r2 = Register()
     r2.new_reg()
     # True condition
-    o = Matrix.modify_matrix(m, p, "cbind") # TODO: maybe just update the original unique matrix
+    output = binding(m, p, "cbind")
+    o = Matrix.modify_matrix((row, col), output, "cbind") # TODO: maybe just update the original unique matrix
+    print("3")
     # False
     q = Matrix.modify_matrix(m, None, "+")
+    print("4")
     #ifelse 
-    print("ifelse {} {} {}".format(r, o, q))
+    print("ifelse {} {} {}".format(r2, o, q))
     r3 = Register()
     r3.new_reg()
     end_for(loop1)
