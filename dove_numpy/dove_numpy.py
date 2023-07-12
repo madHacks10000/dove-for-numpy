@@ -167,9 +167,6 @@ class DoveNumpy():
             r.new_reg()
             return r
 
-    def __len__(self):
-        return self.row
-
     def __iadd__(self, other):
         other = "#{}".format(other) if isinstance(other, (int, float)) else other
         if type(self) == Matrix:
@@ -264,10 +261,10 @@ class Matrix(DoveNumpy):
 
         # If matrix isn't a slice
         if sliced == False and slice_obj == None:
-            if self.name == None: 
-                print("def ${} [1:{}] [1:{}]\n\t{} ".format(self.iden, self.row, self.col, self.operation), end = ' ')
-            elif operation == "empty": 
+            if operation == "empty": 
                 print("def ${} [1:{}] [1:{}]\n\empty\nend ${}".format(self.iden, self.row, self.col, self.iden))
+            elif self.name == None: 
+                print("def ${} [1:{}] [1:{}]\n\t{} ".format(self.iden, self.row, self.col, self.operation), end = ' ')
             else: # External dataset
                 print("def ${} [1:{}] [1:{}]\n\tdataset {}\nend ${}".format(self.iden, self.row, self.col, self.name, self.iden))
     
@@ -290,6 +287,9 @@ class Matrix(DoveNumpy):
         bind = False
         if type(operand) == type(None): 
             operand = ""
+            param = obj
+            row = obj.shape[0]
+            col = obj.shape[1]
         else:
             if operation == "*" and type(operand) == Matrix:
                 row = obj.row
@@ -306,9 +306,9 @@ class Matrix(DoveNumpy):
                 row = obj.row
                 col = obj.col
                 param = "{} ".format(obj)
-            operand = "#{}".format(operand) if isinstance(operand, (int, float)) else operand
-            tmp = Matrix(row, col, None, operation)
-            print("{}{}\nend ${}".format(param, operand, tmp.iden)) #first param was obj.iden
+        operand = "#{}".format(operand) if isinstance(operand, (int, float)) else operand
+        tmp = Matrix(row, col, None, operation)
+        print("{}{}\nend ${}".format(param, operand, tmp.iden)) #first param was obj.iden
             
         return tmp
 
@@ -343,6 +343,9 @@ class Matrix(DoveNumpy):
         elif type(idx) == Register: #TODO: FIX 
             m = Matrix.modify_matrix(self, idx, "==")
             print("update ${} {} {}".format(self.iden, str(m), value))
+    
+    def __len__(self):
+        return self.row
 
     def append(self, element, invisible=False):
         if invisible == False:
@@ -370,10 +373,11 @@ def for_loop(start, end, step, obj): # Obj is string or function
     global matrix_num
     global loop_indx
     matrix_num += 1
+    #obj
     if type(obj) == ForIndex:
         index_var = " \{}".format(obj.iden)
     elif type(obj) == Register or type(obj) == type(None):
-        index_var = ""
+        index_var = " \{}".format(loop_indx)
 
     if type(end) == int:
         new_end = end
@@ -390,6 +394,8 @@ def for_index(var):
     return v
 
 def make_ptr(matrix): #TODO: see if I even need this
+    #if type(matrix) != Matrix:
+    #matrix = Matrix(len(matrix), len(matrix[0])) # start work here
     if len(np.shape(matrix)) == 2:
         var = Pointer(matrix.iden, ForIndex(), ForIndex())
     else:
@@ -450,18 +456,21 @@ def sum(arr, axis = None): # Elements to sum, takes in array
     else:
         l = 0
         l = for_index(l)
-        if axis == 0:
+        # Create the matrices that will hold the summation values
+        if axis == 0: # Adding down columns
             m = Matrix(1, arr.col, None, "empty")
             arr.col = l
+            loop1 = for_loop(0, arr, 1, l)
+            s = arr[:,l]
         elif axis == 1:
             m = Matrix(1, arr.row, None, "empty")
             arr.row = l
-        loop1 = for_loop(0, arr, 1, l)
-        n = Matrix(arr.row, l, None, None, arr)
-        print("sum {}".format(n.iden))
+            loop1 = for_loop(0, arr, 1, l)
+            s = arr[l,:]
+        print("sum {}".format(s))
         r = Register()
-        print(r.new_reg())
-        m[n.row, n.col] = r
+        r.new_reg()
+        m[1, l] = r    
         end_for(loop1)
         return r
     
@@ -483,8 +492,7 @@ def array(data, dtype = None):
         else:
             return data
     elif len(data) == 0:
-        return Matrix.modify_matrix((1, 1), None, "empty")
-    
+        return Matrix(1, 1, None, "empty")
 
 # Adaboost
 def ones(shape): #TODO: may need to remove
@@ -527,7 +535,7 @@ def binding(first, second, mode):
             output_str = str(first)
 
         if type(second) == Pointer:
-            output_str += str(first)
+            output_str += str(second)
         elif second.shape[0] > 1:
             for i in range(second.row):
                 x = second[i,:]
@@ -539,7 +547,6 @@ def binding(first, second, mode):
 
 def unique(array): # TODO: come back to
     # Returns Matrix of sorted unique values
-    #TODO: figure out how to deal with ForIndex dimensions
     row = array.slice_obj.row if isinstance(array.shape[0], (tuple, slice)) else None
     row = 1 if isinstance(array.shape[0], ForIndex) else row
     row = array.shape[0] if row == None else row
@@ -573,7 +580,6 @@ def unique(array): # TODO: come back to
     # True condition
     output = binding(m, p, "cbind")
     o = Matrix.modify_matrix((row, col), output, "cbind") # TODO: maybe just update the original unique matrix
-    print("3")
     # False
     q = Matrix.modify_matrix(m, None, "+")
     print("4")
@@ -583,6 +589,7 @@ def unique(array): # TODO: come back to
     r3.new_reg()
     end_for(loop1)
     end_for(loop2) if tmp != 1 else None
+    return o #TODO: find a permanent fix
 
 
 def log(obj): # Natural log, element-wise
